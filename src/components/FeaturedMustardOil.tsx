@@ -20,7 +20,7 @@ import { useStore } from '../context/StoreContext';
 import { Product } from '../types';
 
 export const FeaturedMustardOil: React.FC = () => {
-  const { addToCart, setIsCheckoutOpen } = useStore();
+  const { addToCart, setIsCheckoutOpen, isLoggedIn, setIsLoginModalOpen, setLoginPromptReason } = useStore();
   const [added, setAdded] = useState(false);
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
 
@@ -38,11 +38,19 @@ export const FeaturedMustardOil: React.FC = () => {
 
   const handleAddToCart = () => {
     addToCart(selectedProduct, quantity);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    if (isLoggedIn) {
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+    }
   };
 
   const handleInstantBuy = () => {
+    if (!isLoggedIn) {
+      addToCart(selectedProduct, quantity);
+      setLoginPromptReason('checkout');
+      setIsLoginModalOpen(true);
+      return;
+    }
     addToCart(selectedProduct, quantity);
     setIsCheckoutOpen(true);
   };

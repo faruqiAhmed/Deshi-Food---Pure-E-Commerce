@@ -12,12 +12,20 @@ export const CartDrawer: React.FC = () => {
     cartSubtotal, 
     cartCount,
     setIsCheckoutOpen,
-    deliveryCharge
+    deliveryCharge,
+    isLoggedIn,
+    setIsLoginModalOpen,
+    setLoginPromptReason
   } = useStore();
 
   if (!isCartOpen) return null;
 
   const handleCheckoutClick = () => {
+    if (!isLoggedIn) {
+      setLoginPromptReason('checkout');
+      setIsLoginModalOpen(true);
+      return;
+    }
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
   };
@@ -179,13 +187,32 @@ export const CartDrawer: React.FC = () => {
                 * ডেলিভারি চার্জ চেকআউটের সময় শহর অনুযায়ী নির্ধারিত হবে।
               </p>
 
+              {!isLoggedIn && (
+                <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-xl flex items-center justify-between gap-2 text-amber-950 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm">🔒</span>
+                    <span className="font-bold">অর্ডার করতে লগইন প্রয়োজন</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginPromptReason('checkout');
+                      setIsLoginModalOpen(true);
+                    }}
+                    className="font-bold text-[#1C3B2B] underline hover:text-[#142a1e] cursor-pointer"
+                  >
+                    লগইন করুন
+                  </button>
+                </div>
+              )}
+
               {/* "চেকআউট করুন" Button */}
               <button
                 onClick={handleCheckoutClick}
                 className="w-full bg-[#1C3B2B] hover:bg-[#152D21] text-white font-bold text-base py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                 id="cart-proceed-checkout-btn"
               >
-                <span>চেকআউট করুন</span>
+                <span>{isLoggedIn ? 'চেকআউট করুন' : 'লগইন করে চেকআউট করুন'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

@@ -8,12 +8,12 @@ import {
   X, 
   CheckCircle2, 
   Truck, 
-  Award, 
   MapPin, 
   PackageCheck, 
   Heart,
   ChevronRight,
-  Film
+  Film,
+  LogIn
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS } from '../data/products';
@@ -27,7 +27,9 @@ export const Header: React.FC = () => {
     setIsCartOpen, 
     setIsCheckoutOpen,
     currentUser,
-    addToCart
+    addToCart,
+    isLoggedIn,
+    setIsLoginModalOpen
   } = useStore();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -106,17 +108,33 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Desktop Navigation Links - ONLY: পণ্যসমূহ, সরিষার তেল, আমাদের গল্প, যোগাযোগ */}
+          {/* Desktop Navigation Links - হোম, শপ, সরিষার তেল, আমাদের গল্প, যোগাযোগ */}
           <nav className="hidden lg:flex items-center gap-2 text-sm font-semibold text-[#374151]">
             <button
-              onClick={() => handleNavClick('shop')}
+              onClick={() => {
+                setActiveTab('shop');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-3.5 py-2 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'shop' 
                   ? 'text-[#1C3B2B] bg-emerald-50 font-bold border-b-2 border-[#1C3B2B]' 
                   : 'hover:text-[#1C3B2B] hover:bg-[#F8F5EE]'
               }`}
             >
-              পণ্যসমূহ
+              হোম
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('shop');
+                setTimeout(() => {
+                  const el = document.getElementById('products-section');
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }, 50);
+              }}
+              className="px-3.5 py-2 rounded-lg hover:text-[#1C3B2B] hover:bg-[#F8F5EE] transition-colors cursor-pointer"
+            >
+              শপ
             </button>
 
             <button
@@ -130,6 +148,19 @@ export const Header: React.FC = () => {
               className="px-3.5 py-2 rounded-lg hover:text-[#1C3B2B] hover:bg-[#F8F5EE] transition-colors cursor-pointer"
             >
               সরিষার তেল
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('shop');
+                setTimeout(() => {
+                  const el = document.getElementById('customer-reviews-section');
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              className="px-3.5 py-2 rounded-lg hover:text-[#1C3B2B] hover:bg-[#F8F5EE] transition-colors cursor-pointer"
+            >
+              গ্রাহক রিভিউ
             </button>
 
             <button
@@ -160,19 +191,6 @@ export const Header: React.FC = () => {
 
           {/* Right Action Icons & Checkout CTA */}
           <div className="flex items-center gap-2 sm:gap-3">
-            
-            {/* Loyalty Points Pill (Direct link to dashboard) */}
-            <button
-              onClick={() => handleNavClick('dashboard')}
-              title="আপনার লয়ালটি পয়েন্ট"
-              className="hidden sm:flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all shadow-2xs"
-            >
-              <Award className="w-4 h-4 text-amber-600" />
-              <span>{currentUser.loyaltyPoints} পয়েন্ট</span>
-              <span className="text-[10px] bg-amber-200 text-amber-800 px-1 rounded-sm">
-                {currentUser.tier}
-              </span>
-            </button>
 
             {/* Cart Button with Counter and Subtotal */}
             <button
@@ -189,14 +207,27 @@ export const Header: React.FC = () => {
               )}
             </button>
 
-            {/* User Profile Button */}
-            <button
-              onClick={() => handleNavClick('dashboard')}
-              className="p-2 text-[#374151] hover:text-[#1C3B2B] hover:bg-[#F8F5EE] rounded-full transition-colors hidden sm:flex"
-              title="আমার প্রোফাইল ও অর্ডার"
-            >
-              <User className="w-5 h-5" />
-            </button>
+            {/* User Profile Button / Login CTA (Desktop) */}
+            {isLoggedIn ? (
+              <button
+                onClick={() => handleNavClick('dashboard')}
+                className="hidden sm:flex items-center gap-1.5 p-2 text-[#374151] hover:text-[#1C3B2B] hover:bg-[#F8F5EE] rounded-full transition-colors"
+                title="আমার প্রোফাইল ও অর্ডার"
+                id="desktop-profile-btn"
+              >
+                <User className="w-5 h-5" />
+                <span className="text-xs font-bold text-[#1C3B2B] hidden xl:inline">{currentUser.name}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="hidden sm:flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#1C3B2B] border border-emerald-300 font-bold px-3 py-1.5 rounded-lg text-xs transition-all shadow-2xs"
+                id="desktop-login-btn"
+              >
+                <LogIn className="w-3.5 h-3.5 text-emerald-700" />
+                <span>লগইন / ওটিপি</span>
+              </button>
+            )}
 
             {/* "এখনই অর্ডার করুন" (Order Now) Primary Crimson Button matching video */}
             <button
@@ -236,34 +267,80 @@ export const Header: React.FC = () => {
       {/* Mobile Drawer Menu */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-white border-b border-[#EFEAE1] px-4 pt-2 pb-6 space-y-3 animate-fadeIn">
-          {/* User quick card */}
-          <div 
-            onClick={() => handleNavClick('dashboard')}
-            className="flex items-center justify-between p-3 bg-amber-50/80 rounded-xl border border-amber-200 cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#1C3B2B] text-amber-400 font-bold flex items-center justify-center">
-                {currentUser.name.charAt(0)}
-              </div>
-              <div>
-                <p className="text-sm font-bold text-[#1C3B2B]">{currentUser.name}</p>
-                <p className="text-xs text-amber-800 font-medium">
-                  {currentUser.loyaltyPoints} লয়ালটি পয়েন্ট • {currentUser.tier} টিয়ার
-                </p>
+          {/* User Status Card (Logged in vs Logged out) */}
+          {isLoggedIn ? (
+            <div className="space-y-2">
+              <div 
+                onClick={() => handleNavClick('dashboard')}
+                className="flex items-center justify-between p-3 bg-[#FAF8F5] rounded-xl border border-stone-200 cursor-pointer hover:bg-emerald-50/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#1C3B2B] text-amber-400 font-bold flex items-center justify-center shrink-0">
+                    {currentUser.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-[#1C3B2B]">{currentUser.name}</p>
+                    <p className="text-xs text-stone-500 font-medium">
+                      {currentUser.phone || 'আমার প্রোফাইল ও অর্ডার'}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-amber-700" />
-          </div>
+          ) : (
+            <div 
+              onClick={() => {
+                setIsLoginModalOpen(true);
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-between p-3.5 bg-emerald-50 rounded-xl border border-emerald-300 cursor-pointer hover:bg-emerald-100 transition-colors shadow-2xs"
+              id="mobile-login-card"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#1C3B2B] text-amber-300 font-bold flex items-center justify-center">
+                  <LogIn className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[#1C3B2B]">লগইন / সাইন-আপ</p>
+                  <p className="text-xs text-emerald-800">
+                    ফোন নম্বর ও ওটিপি (OTP) দিয়ে প্রবেশ করুন
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs bg-[#1C3B2B] text-white px-3 py-1.5 rounded-lg font-bold">
+                লগইন
+              </span>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2 pt-1 text-sm font-medium">
             <button
-              onClick={() => handleNavClick('shop')}
+              onClick={() => {
+                setActiveTab('shop');
+                setIsMobileMenuOpen(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`p-3 rounded-lg text-left transition-colors font-medium flex items-center gap-2 ${
                 activeTab === 'shop' ? 'bg-[#1C3B2B] text-white font-bold' : 'bg-stone-100 text-stone-800 hover:bg-stone-200'
               }`}
             >
+              <span>🏠</span>
+              <span>হোম</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('shop');
+                setIsMobileMenuOpen(false);
+                setTimeout(() => {
+                  const el = document.getElementById('products-section');
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              className="p-3 rounded-lg text-left transition-colors bg-stone-100 text-stone-800 hover:bg-stone-200 flex items-center gap-2"
+            >
               <span>🛍️</span>
-              <span>পণ্যসমূহ</span>
+              <span>শপ</span>
             </button>
             <button
               onClick={() => {
@@ -298,10 +375,10 @@ export const Header: React.FC = () => {
                   window.location.href = 'tel:01842078717';
                 }
               }}
-              className="p-3 rounded-lg bg-emerald-50 text-emerald-900 flex items-center gap-2 font-bold hover:bg-emerald-100 transition-colors"
+              className="col-span-2 p-3 rounded-lg bg-emerald-50 text-emerald-900 flex items-center justify-center gap-2 font-bold hover:bg-emerald-100 transition-colors"
             >
               <Phone className="w-4 h-4 text-emerald-700 shrink-0" />
-              <span>যোগাযোগ</span>
+              <span>যোগাযোগ ও সহায়তা</span>
             </button>
           </div>
         </div>

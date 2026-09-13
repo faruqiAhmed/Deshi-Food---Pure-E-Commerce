@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { 
-  Award, 
   Clock, 
   MapPin, 
   ShoppingBag, 
-  Gift, 
   ArrowRight, 
   Check, 
   User, 
-  Sparkles, 
-  CreditCard,
-  Plus,
-  ExternalLink,
-  ChevronRight
+  Plus, 
+  ChevronRight, 
+  LogIn, 
+  LogOut, 
+  Smartphone,
+  PackageCheck,
+  Lock
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
@@ -20,33 +20,22 @@ export const CustomerDashboard: React.FC = () => {
   const { 
     currentUser, 
     orders, 
-    redeemVoucher, 
     reorderItems, 
     setCurrentTrackingOrderId, 
     setActiveTab,
-    updateUserProfile
+    updateUserProfile,
+    isLoggedIn,
+    setIsLoginModalOpen,
+    logout,
+    dashboardSubTab: activeSubTab,
+    setDashboardSubTab: setActiveSubTab
   } = useStore();
 
-  const [activeSubTab, setActiveSubTab] = useState<'loyalty' | 'orders' | 'addresses'>('loyalty');
   const [newAddressInput, setNewAddressInput] = useState('');
   const [newAddressTag, setNewAddressTag] = useState<'Home' | 'Office' | 'Other'>('Home');
   const [newAddressCity, setNewAddressCity] = useState<'Dhaka' | 'Outside Dhaka'>('Dhaka');
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
-
-  const nextTierTarget = 5000;
-  const progressToNextTier = Math.min(100, Math.round((currentUser.totalSpent / nextTierTarget) * 100));
-
-  const handleRedeem = (rewardId: string) => {
-    const success = redeemVoucher(rewardId);
-    if (success) {
-      setFeedbackMsg('ভাউচার সফলভাবে সক্রিয় হয়েছে! চেকআউটে স্বয়ংক্রিয়ভাবে ছাড় প্রযোজ্য হবে।');
-      setTimeout(() => setFeedbackMsg(''), 4000);
-    } else {
-      setFeedbackMsg('পর্যাপ্ত লয়ালটি পয়েন্ট নেই!');
-      setTimeout(() => setFeedbackMsg(''), 3000);
-    }
-  };
 
   const handleTrack = (orderId: string) => {
     setCurrentTrackingOrderId(orderId);
@@ -78,70 +67,75 @@ export const CustomerDashboard: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
         
         {/* Customer Profile Header Banner */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100/50 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        {isLoggedIn ? (
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100/50 rounded-full blur-3xl pointer-events-none" />
             
-            {/* User Info */}
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-[#1C3B2B] text-[#EAB308] font-bold text-2xl flex items-center justify-center shadow-md">
-                {currentUser.name.charAt(0)}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
+            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              
+              {/* User Info */}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-[#1C3B2B] text-[#EAB308] font-bold text-2xl flex items-center justify-center shadow-md shrink-0">
+                  {currentUser.name.charAt(0)}
+                </div>
+                <div>
                   <h1 className="text-xl sm:text-2xl font-extrabold text-[#1C3B2B]">
                     {currentUser.name}
                   </h1>
-                  <span className="bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                    <Award className="w-3.5 h-3.5 text-amber-600" />
-                    <span>{currentUser.tier} মেম্বার</span>
-                  </span>
+                  <p className="text-xs text-stone-500 mt-1 font-mono">
+                    {currentUser.phone} • {currentUser.email}
+                  </p>
+                  <p className="text-[11px] text-stone-400 mt-0.5">
+                    নিবন্ধিত গ্রাহক • সদস্য: {currentUser.joinedDate}
+                  </p>
                 </div>
-                <p className="text-xs text-stone-500 mt-1">
-                  {currentUser.email} • {currentUser.phone}
-                </p>
-                <p className="text-[11px] text-stone-400 mt-0.5">
-                  নিবন্ধিত সদস্য: {currentUser.joinedDate}
-                </p>
               </div>
-            </div>
 
-            {/* Loyalty Quick Stats Box */}
-            <div className="flex items-center gap-3 bg-amber-50/80 p-4 rounded-2xl border border-amber-200 shrink-0">
-              <div className="p-3 bg-[#D97706] text-white rounded-xl shadow-xs">
-                <Gift className="w-6 h-6" />
-              </div>
+              {/* Logout Button */}
               <div>
-                <span className="text-xs font-semibold text-amber-900 block">
-                  মোট রিওয়ার্ড পয়েন্ট
-                </span>
-                <span className="text-2xl font-black text-amber-950 font-mono">
-                  {currentUser.loyaltyPoints} পয়েন্ট
-                </span>
-                <span className="text-[11px] text-amber-800 block">
-                  মূল্য: <strong>৳{currentUser.loyaltyPoints}</strong> সমপরিমাণ ছাড়
-                </span>
+                <button
+                  onClick={logout}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-stone-100 hover:bg-red-50 text-stone-700 hover:text-red-700 border border-stone-200 hover:border-red-200 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                  title="অ্যাকাউন্ট থেকে লগআউট করুন"
+                  id="dashboard-header-logout-btn"
+                >
+                  <LogOut className="w-4 h-4 text-red-600" />
+                  <span>লগআউট</span>
+                </button>
               </div>
-            </div>
 
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-emerald-300/80 shadow-xs relative overflow-hidden bg-gradient-to-br from-emerald-50/60 via-white to-amber-50/30">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4 text-left">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#1C3B2B] text-amber-300 flex items-center justify-center text-2xl font-bold shadow-md shrink-0">
+                  <Smartphone className="w-7 h-7" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-2xl font-black text-[#1C3B2B]">
+                    অ্যাকাউন্টে লগইন করুন
+                  </h2>
+                  <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-xl">
+                    পূর্বের অর্ডার হিস্ট্রি দেখতে, ডেলিভারি ট্র্যাক করতে এবং দ্রুত কেনাকাটা সম্পন্ন করতে আপনার মোবাইল নম্বর দিয়ে সহজে লগইন করুন।
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="w-full sm:w-auto bg-[#1C3B2B] hover:bg-[#142a1e] text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 text-sm"
+                id="dashboard-login-btn"
+              >
+                <LogIn className="w-4 h-4 text-amber-300" />
+                <span>মোবাইল ওটিপি দিয়ে লগইন</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Dashboard Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-stone-200 pb-2 overflow-x-auto text-sm font-bold">
-          <button
-            onClick={() => setActiveSubTab('loyalty')}
-            className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-              activeSubTab === 'loyalty'
-                ? 'bg-[#1C3B2B] text-white shadow-xs'
-                : 'text-stone-600 hover:bg-stone-200'
-            }`}
-          >
-            <Award className="w-4 h-4" />
-            <span>লয়ালটি রিওয়ার্ডস ও ভাউচার</span>
-          </button>
-
           <button
             onClick={() => setActiveSubTab('orders')}
             className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
@@ -151,7 +145,7 @@ export const CustomerDashboard: React.FC = () => {
             }`}
           >
             <Clock className="w-4 h-4" />
-            <span>পূর্বের অর্ডার হিস্টোরি ({orders.length})</span>
+            <span>পূর্বের অর্ডার হিস্টোরি {isLoggedIn ? `(${orders.length})` : ''}</span>
           </button>
 
           <button
@@ -174,136 +168,39 @@ export const CustomerDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 1: Loyalty & Rewards */}
-        {activeSubTab === 'loyalty' && (
-          <div className="space-y-6">
-            
-            {/* Tier Progress Card */}
-            <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h3 className="font-bold text-base text-[#1C3B2B]">
-                    টিয়ার অগ্রগতি: {currentUser.tier} থেকে Gold টিয়ারে আপগ্রেড
-                  </h3>
-                  <p className="text-xs text-stone-500">
-                    আর মাত্র ৳{Math.max(0, nextTierTarget - currentUser.totalSpent)} টাকার পণ্য কিনলেই গোল্ড মেম্বারশিপ এবং বিশেষ ছাড় আনলক হবে!
-                  </p>
-                </div>
-                <span className="text-xs font-mono font-bold bg-stone-100 text-stone-800 px-3 py-1 rounded-full">
-                  ব্যয়: ৳{currentUser.totalSpent} / ৳{nextTierTarget}
-                </span>
-              </div>
-
-              <div className="w-full bg-stone-100 rounded-full h-3 overflow-hidden">
-                <div 
-                  className="bg-gradient-to-r from-amber-500 to-[#D97706] h-full rounded-full transition-all duration-500"
-                  style={{ width: `${progressToNextTier}%` }}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-center text-xs">
-                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-stone-200">
-                  <span className="block text-stone-400 font-medium">ব্রোঞ্জ</span>
-                  <span className="font-bold text-stone-700">৳০+ ব্যয়</span>
-                </div>
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-300">
-                  <span className="block text-amber-700 font-bold">সিলভার (বর্তমান)</span>
-                  <span className="font-bold text-amber-900">৳২,০০০+ ব্যয়</span>
-                </div>
-                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-stone-200">
-                  <span className="block text-stone-400 font-medium">গোল্ড</span>
-                  <span className="font-bold text-stone-700">৳৫,০০০+ ব্যয়</span>
-                </div>
-                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-stone-200">
-                  <span className="block text-stone-400 font-medium">প্লাটিনাম</span>
-                  <span className="font-bold text-stone-700">৳১০,০০০+ ব্যয়</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Redeemable Loyalty Vouchers */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-[#1C3B2B] flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-500" />
-                <span>আপনার জন্য উপলব্ধ রিওয়ার্ড ভাউচার</span>
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {currentUser.activeRewards.map((reward) => (
-                  <div
-                    key={reward.id}
-                    className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${
-                      reward.isRedeemed
-                        ? 'bg-stone-50 border-stone-200 opacity-60'
-                        : 'bg-white border-amber-200 shadow-xs hover:shadow-md'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-bold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-md">
-                          {reward.code}
-                        </span>
-                        <span className="text-xs text-stone-400">
-                          মেয়াদ: {reward.expiryDate}
-                        </span>
-                      </div>
-
-                      <h4 className="text-base font-bold text-[#1C3B2B] mt-2">
-                        {reward.title}
-                      </h4>
-                      <p className="text-xs text-stone-500 mt-0.5">
-                        প্রয়োজনীয় পয়েন্ট: {reward.pointsRequired} পয়েন্ট (মূল্য: ৳{reward.discountTaka} ছাড়)
-                      </p>
-                    </div>
-
-                    <div className="pt-4 mt-3 border-t border-stone-100 flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-800">
-                        {reward.isRedeemed ? 'অলরেডি সক্রিয়' : `${reward.pointsRequired} পয়েন্ট খরচ হবে`}
-                      </span>
-
-                      <button
-                        onClick={() => handleRedeem(reward.id)}
-                        disabled={reward.isRedeemed || currentUser.loyaltyPoints < reward.pointsRequired}
-                        className={`text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
-                          reward.isRedeemed
-                            ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
-                            : currentUser.loyaltyPoints < reward.pointsRequired
-                            ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
-                            : 'bg-[#D97706] hover:bg-[#B45309] text-white shadow-xs'
-                        }`}
-                      >
-                        {reward.isRedeemed ? 'সক্রিয়কৃত' : 'পয়েন্ট দিয়ে রিডিম করুন'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* How Loyalty Program Works */}
-            <div className="bg-[#FAF8F5] p-6 rounded-3xl border border-[#EFEAE1] space-y-3">
-              <h4 className="font-bold text-sm text-[#1C3B2B]">
-                💡 Deshi Food লয়ালটি রিওয়ার্ডস কিভাবে কাজ করে?
-              </h4>
-              <ul className="text-xs text-stone-600 space-y-2 list-disc list-inside">
-                <li>প্রতি <strong>৳২০ টাকার অর্ডারে ১টি লয়ালটি পয়েন্ট</strong> স্বয়ংক্রিয়ভাবে জমা হয়।</li>
-                <li>১টি লয়ালটি পয়েন্ট = <strong>৳১ টাকা সরাসরি নগদ ছাড়</strong> পরবর্তী যেকোনো অর্ডারে।</li>
-                <li>চেকআউটের সময় স্লাইডারের মাধ্যমে সরাসরি পয়েন্ট ব্যবহার করে মূল্য ছাড় পেতে পারেন।</li>
-                <li>গোল্ড ও প্লাটিনাম মেম্বাররা ফ্রি শিপিং ও বিশেষ উপহার সামগ্রী লাভ করেন।</li>
-              </ul>
-            </div>
-
-          </div>
-        )}
-
-        {/* Tab 2: Orders History */}
+        {/* Orders History Tab */}
         {activeSubTab === 'orders' && (
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-[#1C3B2B]">
               আপনার পূর্বের অর্ডার সমূহ
             </h3>
 
-            {orders.length === 0 ? (
+            {!isLoggedIn ? (
+              <div 
+                className="p-8 sm:p-12 text-center bg-white rounded-3xl border border-emerald-200 shadow-xs space-y-4 max-w-lg mx-auto"
+                id="orders-login-gate"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-[#1C3B2B] flex items-center justify-center mx-auto shadow-inner">
+                  <PackageCheck className="w-8 h-8 text-[#1C3B2B]" />
+                </div>
+                <div className="space-y-1.5">
+                  <h4 className="text-lg font-extrabold text-[#1C3B2B]">
+                    অর্ডার দেখতে লগইন আবশ্যক
+                  </h4>
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
+                    আপনার পূর্বের অর্ডার সমূহ শুধুমাত্র লগইন করা থাকলে দেখা যাবে। আপনার মোবাইল নম্বর ও দ্রুত ওটিপি (OTP) দিয়ে অ্যাকাউন্টে লগইন করুন।
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="w-full py-3.5 px-6 bg-[#1C3B2B] hover:bg-[#142a1e] text-white font-bold rounded-xl text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  id="dashboard-gate-login-btn"
+                >
+                  <LogIn className="w-4 h-4 text-amber-300" />
+                  <span>মোবাইল ওটিপি দিয়ে লগইন করুন</span>
+                </button>
+              </div>
+            ) : orders.length === 0 ? (
               <div className="p-8 text-center bg-white rounded-2xl border border-stone-200">
                 <p className="text-stone-500 text-sm">কোনো অর্ডার হিস্টোরি পাওয়া যায়নি!</p>
               </div>

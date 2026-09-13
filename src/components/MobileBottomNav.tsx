@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, Home, MapPin, Award, Zap, ArrowRight, ShoppingCart } from 'lucide-react';
+import { Home, ShoppingBag, Zap, ShoppingCart, User } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS } from '../data/products';
 
@@ -7,19 +7,58 @@ export const MobileBottomNav: React.FC = () => {
   const { 
     activeTab, 
     setActiveTab, 
+    setDashboardSubTab,
     cartCount, 
     cartSubtotal,
     setIsCartOpen,
     setIsCheckoutOpen,
-    addToCart
+    addToCart,
+    isLoggedIn,
+    setIsLoginModalOpen,
+    setLoginPromptReason
   } = useStore();
 
-  const handleNav = (tab: 'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story') => {
-    setActiveTab(tab);
+  const handleHomeClick = () => {
+    setActiveTab('shop');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleShopClick = () => {
+    if (activeTab === 'shop') {
+      const el = document.getElementById('products-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else {
+      setActiveTab('shop');
+      setTimeout(() => {
+        const el = document.getElementById('products-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
+
+  const handleProfileClick = () => {
+    if (!isLoggedIn) {
+      setLoginPromptReason('orders');
+      setIsLoginModalOpen(true);
+    } else {
+      setActiveTab('dashboard');
+      setDashboardSubTab('orders');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const handleOrderNow = () => {
+    if (!isLoggedIn) {
+      setLoginPromptReason('checkout');
+      setIsLoginModalOpen(true);
+      return;
+    }
     if (cartCount > 0) {
       // If user has items in cart, proceed straight to Checkout for lightning-fast order!
       setIsCheckoutOpen(true);
@@ -33,38 +72,40 @@ export const MobileBottomNav: React.FC = () => {
     }
   };
 
+  const isHomeActive = activeTab === 'shop';
+  const isProfileActive = activeTab === 'dashboard';
+
   return (
     <nav 
       aria-label="মোবাইল নেভিগেশন"
       className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200/90 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] h-16 px-2 flex items-center justify-between"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      {/* 1. Home / Shop */}
+      {/* 1. হোম (Home) */}
       <button
-        onClick={() => handleNav('shop')}
+        onClick={handleHomeClick}
         className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-          activeTab === 'shop' ? 'text-[#1C3B2B] font-bold' : 'text-stone-500 hover:text-[#1C3B2B]'
+          isHomeActive ? 'text-[#1C3B2B] font-bold' : 'text-stone-500 hover:text-[#1C3B2B]'
         }`}
+        id="mobile-bottom-home-btn"
+        title="হোম পেজ"
       >
-        <Home className={`w-5 h-5 mb-0.5 ${activeTab === 'shop' ? 'stroke-[2.5]' : 'stroke-2'}`} />
+        <Home className={`w-5 h-5 mb-0.5 ${isHomeActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
+        <span className="text-[10px] tracking-tight">হোম</span>
+      </button>
+
+      {/* 2. শপ (Shop / পণ্যসমূহ) */}
+      <button
+        onClick={handleShopClick}
+        className="flex-1 flex flex-col items-center justify-center py-1 transition-colors text-stone-500 hover:text-[#1C3B2B]"
+        id="mobile-bottom-shop-btn"
+        title="সকল পণ্য দেখুন"
+      >
+        <ShoppingBag className="w-5 h-5 mb-0.5 stroke-2" />
         <span className="text-[10px] tracking-tight">শপ</span>
       </button>
 
-      {/* 2. Real-time Tracking */}
-      <button
-        onClick={() => handleNav('tracking')}
-        className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors relative ${
-          activeTab === 'tracking' ? 'text-[#1C3B2B] font-bold' : 'text-stone-500 hover:text-[#1C3B2B]'
-        }`}
-      >
-        <div className="relative">
-          <MapPin className={`w-5 h-5 mb-0.5 ${activeTab === 'tracking' ? 'stroke-[2.5]' : 'stroke-2'}`} />
-          <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white animate-pulse" />
-        </div>
-        <span className="text-[10px] tracking-tight">ট্র্যাকিং</span>
-      </button>
-
-      {/* 3. CENTER HIGHLIGHTED: "এখনই অর্ডার" (Order Now) Action Button */}
+      {/* 3. CENTER HIGHLIGHTED: "অর্ডার" (Order Now) Action Button */}
       <div className="flex-1 flex justify-center -mt-4">
         <button
           onClick={handleOrderNow}
@@ -87,6 +128,7 @@ export const MobileBottomNav: React.FC = () => {
         onClick={() => setIsCartOpen(true)}
         className="flex-1 flex flex-col items-center justify-center py-1 transition-colors relative text-stone-500 hover:text-[#1C3B2B]"
         id="mobile-cart-bottom-btn"
+        title="শপিং কার্ট"
       >
         <div className="relative">
           <ShoppingCart className="w-5 h-5 mb-0.5 text-stone-600" />
@@ -101,15 +143,17 @@ export const MobileBottomNav: React.FC = () => {
         </span>
       </button>
 
-      {/* 5. Loyalty / Account */}
+      {/* 5. Profile / Account (প্রোফাইল) */}
       <button
-        onClick={() => handleNav('dashboard')}
+        onClick={handleProfileClick}
         className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-          activeTab === 'dashboard' ? 'text-[#1C3B2B] font-bold' : 'text-stone-500 hover:text-[#1C3B2B]'
+          isProfileActive ? 'text-[#1C3B2B] font-bold' : 'text-stone-500 hover:text-[#1C3B2B]'
         }`}
+        id="mobile-bottom-profile-btn"
+        title="গ্রাহক প্রোফাইল ও অর্ডার হিস্টোরি"
       >
-        <Award className={`w-5 h-5 mb-0.5 ${activeTab === 'dashboard' ? 'stroke-[2.5]' : 'stroke-2'}`} />
-        <span className="text-[10px] tracking-tight">লয়ালটি</span>
+        <User className={`w-5 h-5 mb-0.5 ${isProfileActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
+        <span className="text-[10px] tracking-tight">{isLoggedIn ? 'প্রোফাইল' : 'লগইন'}</span>
       </button>
     </nav>
   );

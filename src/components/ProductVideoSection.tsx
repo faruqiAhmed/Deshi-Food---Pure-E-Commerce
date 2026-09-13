@@ -26,7 +26,7 @@ import { useStore } from '../context/StoreContext';
 import { Product } from '../types';
 
 export const ProductVideoSection: React.FC = () => {
-  const { addToCart, setIsCheckoutOpen } = useStore();
+  const { addToCart, setIsCheckoutOpen, isLoggedIn, setIsLoginModalOpen, setLoginPromptReason } = useStore();
   const [activeVideo, setActiveVideo] = useState<ProductVideo>(PRODUCT_VIDEOS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -52,11 +52,19 @@ export const ProductVideoSection: React.FC = () => {
 
   const handleAddToCart = (product: Product) => {
     addToCart(product, 1);
-    setAddedProductId(product.id);
-    setTimeout(() => setAddedProductId(null), 1500);
+    if (isLoggedIn) {
+      setAddedProductId(product.id);
+      setTimeout(() => setAddedProductId(null), 1500);
+    }
   };
 
   const handleInstantBuy = (product: Product) => {
+    if (!isLoggedIn) {
+      addToCart(product, 1);
+      setLoginPromptReason('checkout');
+      setIsLoginModalOpen(true);
+      return;
+    }
     addToCart(product, 1);
     setIsCheckoutOpen(true);
   };

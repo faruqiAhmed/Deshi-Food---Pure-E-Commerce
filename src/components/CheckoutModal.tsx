@@ -35,6 +35,9 @@ export const CheckoutModal: React.FC = () => {
     pointsDiscount,
     cartTotal,
     currentUser,
+    isLoggedIn,
+    setIsLoginModalOpen,
+    setLoginPromptReason,
     initiateCheckout 
   } = useStore();
 
@@ -50,6 +53,11 @@ export const CheckoutModal: React.FC = () => {
   useEffect(() => {
     setDeliveryCity(city);
   }, [city, setDeliveryCity]);
+
+  useEffect(() => {
+    if (currentUser.name) setName(currentUser.name);
+    if (currentUser.phone) setPhone(currentUser.phone);
+  }, [currentUser]);
 
   if (!isCheckoutOpen) return null;
 
@@ -79,6 +87,11 @@ export const CheckoutModal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLoggedIn) {
+      setLoginPromptReason('checkout');
+      setIsLoginModalOpen(true);
+      return;
+    }
     if (!validateForm()) return;
 
     initiateCheckout({
@@ -511,7 +524,22 @@ export const CheckoutModal: React.FC = () => {
               </div>
 
               {/* Submit Button (Matching video 00:54 "অর্ডার নিশ্চিত করুন") */}
-              <div className="pt-6">
+              <div className="pt-6 space-y-2">
+                {!isLoggedIn && (
+                  <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl flex items-center justify-between gap-2 text-amber-950 text-xs">
+                    <span className="font-medium">⚠️ অর্ডার সম্পন্ন করার পূর্বে লগইন আবশ্যক</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginPromptReason('checkout');
+                        setIsLoginModalOpen(true);
+                      }}
+                      className="font-bold text-[#1C3B2B] underline hover:text-[#152D21] cursor-pointer"
+                    >
+                      লগইন করুন
+                    </button>
+                  </div>
+                )}
                 <button
                   type="submit"
                   className="w-full bg-[#1C3B2B] hover:bg-[#152D21] text-white font-extrabold text-base py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
@@ -519,7 +547,11 @@ export const CheckoutModal: React.FC = () => {
                 >
                   <ShieldCheck className="w-5 h-5 text-amber-300" />
                   <span>
-                    {paymentMethod === 'cod' ? 'অর্ডার নিশ্চিত করুন' : 'পেমেন্ট গেটওয়েতে এগিয়ে যান'}
+                    {!isLoggedIn 
+                      ? 'লগইন করে অর্ডার নিশ্চিত করুন' 
+                      : paymentMethod === 'cod' 
+                      ? 'অর্ডার নিশ্চিত করুন' 
+                      : 'পেমেন্ট গেটওয়েতে এগিয়ে যান'}
                   </span>
                 </button>
                 <p className="text-[11px] text-center text-stone-400 mt-2">

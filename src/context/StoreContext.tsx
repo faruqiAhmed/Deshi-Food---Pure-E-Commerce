@@ -14,6 +14,8 @@ interface StoreContextType {
   // Navigation & Modals
   activeTab: 'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story';
   setActiveTab: (tab: 'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story') => void;
+  dashboardSubTab: 'orders' | 'addresses';
+  setDashboardSubTab: (subTab: 'orders' | 'addresses') => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   isCheckoutOpen: boolean;
@@ -26,6 +28,8 @@ interface StoreContextType {
   setQuickViewProduct: (prod: Product | null) => void;
   shippingLabelOrder: Order | null;
   setShippingLabelOrder: (order: Order | null) => void;
+  loginPromptReason: 'cart' | 'checkout' | 'orders' | null;
+  setLoginPromptReason: (reason: 'cart' | 'checkout' | 'orders' | null) => void;
 
   // Cart
   cart: CartItem[];
@@ -51,6 +55,11 @@ interface StoreContextType {
   cartTotal: number;
 
   // User Profile & Loyalty
+  isLoggedIn: boolean;
+  isLoginModalOpen: boolean;
+  setIsLoginModalOpen: (open: boolean) => void;
+  loginWithPhoneOtp: (phone: string, name?: string) => Promise<boolean>;
+  logout: () => void;
   currentUser: UserProfile;
   updateUserProfile: (data: Partial<UserProfile>) => void;
   redeemVoucher: (rewardId: string) => boolean;
@@ -232,12 +241,15 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation & Modals
   const [activeTab, setActiveTab] = useState<'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story'>('shop');
+  const [dashboardSubTab, setDashboardSubTab] = useState<'orders' | 'addresses'>('orders');
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
+  const [isCheckoutOpen, setIsCheckoutOpenState] = useState<boolean>(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState<boolean>(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [shippingLabelOrder, setShippingLabelOrder] = useState<Order | null>(null);
+  const [loginPromptReason, setLoginPromptReason] = useState<'cart' | 'checkout' | 'orders' | null>(null);
+  const [pendingCartItem, setPendingCartItem] = useState<{ product: Product; quantity: number } | null>(null);
 
   // Cart State (Initialized with 1 Mustard Oil so user immediately sees real data like in demo video)
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -271,9 +283,34 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return INITIAL_USER;
   });
 
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('deshifood_is_logged_in');
+      if (saved !== null) return saved === 'true';
+    } catch {
+      // ignore
+    }
+    return false; // Default guest: require login for add-to-cart & checkout as requested
+  });
+
+  const setIsCheckoutOpen = (open: boolean) => {
+    if (open && !isLoggedIn) {
+      setLoginPromptReason('checkout');
+      setIsLoginModalOpen(true);
+      return;
+    }
+    setIsCheckoutOpenState(open);
+  };
+
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+
   useEffect(() => {
     localStorage.setItem('deshifood_user', JSON.stringify(currentUser));
   }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('deshifood_is_logged_in', String(isLoggedIn));
+  }, [isLoggedIn]);
 
   // Orders State
   const [orders, setOrders] = useState<Order[]>(() => {
@@ -321,6 +358,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Cart operations
   const addToCart = (product: Product, quantity = 1) => {
+    if (!isLoggedIn) {
+      setPendingCartItem({ product, quantity });
+      setLoginPromptReason('cart');
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
@@ -387,7 +431,51 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCouponDiscount(0);
   };
 
-  // User Profile Actions
+  // User Profile & Authentication Actions
+  const loginWithPhoneOtp = async (phone: string, name?: string): Promise<boolean> => {
+    const updatedName = name && name.trim() ? name.trim() : (currentUser.name || 'সম্মানিত গ্রাহক');
+    setCurrentUser((prev) => ({
+      ...prev,
+      phone,
+      name: updatedName,
+    }));
+    setPendingCheckoutData((prev) => ({
+      ...prev,
+      phone,
+      name: updatedName,
+    }));
+    setIsLoggedIn(true);
+
+    // If an item was queued during "Add to Cart" while logged out, add it now
+    if (pendingCartItem) {
+      const itemToAdd = pendingCartItem;
+      setCart((prev) => {
+        const existing = prev.find((item) => item.product.id === itemToAdd.product.id);
+        if (existing) {
+          return prev.map((item) =>
+            item.product.id === itemToAdd.product.id
+              ? { ...item, quantity: item.quantity + itemToAdd.quantity }
+              : item
+          );
+        }
+        return [...prev, { product: itemToAdd.product, quantity: itemToAdd.quantity }];
+      });
+      setPendingCartItem(null);
+      setIsCartOpen(true);
+    } else if (loginPromptReason === 'checkout') {
+      setIsCheckoutOpenState(true);
+    }
+
+    setLoginPromptReason(null);
+    return true;
+  };
+
+  const logout = () => {
+    setIsLoggedIn(false);
+    localStorage.setItem('deshifood_is_logged_in', 'false');
+    setIsCheckoutOpenState(false);
+  };
+
   const updateUserProfile = (data: Partial<UserProfile>) => {
     setCurrentUser((prev) => ({ ...prev, ...data }));
   };
@@ -609,6 +697,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         activeTab,
         setActiveTab,
+        dashboardSubTab,
+        setDashboardSubTab,
         isCartOpen,
         setIsCartOpen,
         isCheckoutOpen,
@@ -621,6 +711,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setQuickViewProduct,
         shippingLabelOrder,
         setShippingLabelOrder,
+        loginPromptReason,
+        setLoginPromptReason,
         cart,
         addToCart,
         updateQuantity,
@@ -640,6 +732,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setPointsToRedeem,
         pointsDiscount,
         cartTotal,
+        isLoggedIn,
+        isLoginModalOpen,
+        setIsLoginModalOpen,
+        loginWithPhoneOtp,
+        logout,
         currentUser,
         updateUserProfile,
         redeemVoucher,

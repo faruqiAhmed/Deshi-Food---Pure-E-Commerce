@@ -104,6 +104,20 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <button 
+                  onClick={() => {
+                    handleNav('shop');
+                    setTimeout(() => {
+                      const el = document.getElementById('customer-reviews-section');
+                      el?.scrollIntoView({ behavior: 'smooth' });
+                    }, 150);
+                  }} 
+                  className="hover:text-amber-300 transition-colors cursor-pointer"
+                >
+                  গ্রাহকদের রিভিউ
+                </button>
+              </li>
+              <li>
+                <button 
                   onClick={() => handleNav('tracking')} 
                   className="hover:text-amber-300 transition-colors cursor-pointer"
                 >
@@ -160,9 +174,9 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Bar matching video 00:23 */}
         <div className="pt-8 border-t border-emerald-900/60 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 gap-4">
-          <p>© Deshi Food. সর্বস্বত্ব সংরক্ষিত।</p>
+          <p>© Deshi Food. সর্বস্বত্ব সংরক্ষিত  খাঁটি পণ্য, সুস্থ জীবনের কথা ।</p>
           <p className="text-amber-300 font-medium font-serif">
-            খাঁটি পণ্য, সুস্থ জীবনের কথা
+            Development  By Nexcent Tech 
           </p>
         </div>
 

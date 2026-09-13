@@ -14,7 +14,7 @@ import { PRODUCTS } from '../data/products';
 import { useStore } from '../context/StoreContext';
 
 export const ProductCatalog: React.FC = () => {
-  const { addToCart, setQuickViewProduct } = useStore();
+  const { addToCart, setQuickViewProduct, isLoggedIn } = useStore();
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
   const [addedItemIds, setAddedItemIds] = useState<Record<string, boolean>>({});
   const [searchFilter, setSearchFilter] = useState('');
@@ -37,10 +37,12 @@ export const ProductCatalog: React.FC = () => {
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product, 1);
-    setAddedItemIds((prev) => ({ ...prev, [product.id]: true }));
-    setTimeout(() => {
-      setAddedItemIds((prev) => ({ ...prev, [product.id]: false }));
-    }, 1200);
+    if (isLoggedIn) {
+      setAddedItemIds((prev) => ({ ...prev, [product.id]: true }));
+      setTimeout(() => {
+        setAddedItemIds((prev) => ({ ...prev, [product.id]: false }));
+      }, 1200);
+    }
   };
 
   return (

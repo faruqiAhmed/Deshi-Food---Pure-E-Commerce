@@ -343,7 +343,7 @@ export const CustomerReviewsSection: React.FC = () => {
           </div>
         )}
 
-        {/* Trust Stats Mini-Strip */}
+        {/* Trust Stats Mini-Strip 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-stone-200/90 shadow-2xs text-xs">
           <div className="flex items-center gap-3 p-2">
             <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-[#1C3B2B] font-bold text-lg shrink-0">
@@ -385,7 +385,7 @@ export const CustomerReviewsSection: React.FC = () => {
             </div>
           </div>
         </div>
-
+*/}
         {/* LINE ONE: Auto Scrolling Customer Review Controls Header */}
         <div className="flex items-center justify-between gap-4 pt-1">
           <div className="flex items-center gap-3">
@@ -596,7 +596,7 @@ export const CustomerReviewsSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Star Distribution Bars */}
+          {/* Star Distribution Bars  */}
           <div className="lg:col-span-5 flex flex-col justify-center space-y-2.5 px-2 sm:px-4">
             <div className="flex items-center gap-3 text-xs">
               <span className="w-12 font-bold text-stone-700 flex items-center gap-1">
@@ -679,7 +679,7 @@ export const CustomerReviewsSection: React.FC = () => {
 
         {/* ========================================================================= */}
         {/* RESTORED: Filter Tabs for In-Page Reviews */}
-        {/* ========================================================================= */}
+        {/* ========================================================================= 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -740,6 +740,7 @@ export const CustomerReviewsSection: React.FC = () => {
         {/* ========================================================================= */}
         {/* RESTORED: Full Customer Reviews 3-Column Grid */}
         {/* ========================================================================= */}
+        {/*
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {inPageFilteredReviews.map((item) => (
             <div
@@ -747,7 +748,7 @@ export const CustomerReviewsSection: React.FC = () => {
               className="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-xs hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between space-y-4 group"
             >
               <div className="space-y-3">
-                {/* Author Info & Verified Badge */}
+                {/* Author Info & Verified Badge 
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-emerald-100 text-[#1C3B2B] font-bold text-sm flex items-center justify-center border border-emerald-200 shadow-2xs shrink-0">
@@ -770,8 +771,9 @@ export const CustomerReviewsSection: React.FC = () => {
                     </span>
                   )}
                 </div>
+                */}
 
-                {/* Rating Stars & Timestamp */}
+                {/* Rating Stars & Timestamp 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1 text-amber-400">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -790,25 +792,26 @@ export const CustomerReviewsSection: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Product Tag */}
+                {/* Product Tag 
                 <div className="text-xs text-amber-900 bg-amber-50/80 px-3 py-1.5 rounded-xl border border-amber-200/70 font-medium line-clamp-1">
                   পণ্য: {item.productName}
                 </div>
 
-                {/* Highlight Tag */}
+                {/* Highlight Tag 
                 {item.highlight && (
                   <div className="inline-block text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
                     ★ {item.highlight}
                   </div>
                 )}
+                */}
 
-                {/* Comment Body */}
+                {/* Comment Body 
                 <p className="text-xs sm:text-sm text-stone-700 leading-relaxed italic">
                   "{item.comment}"
                 </p>
               </div>
 
-              {/* Card Footer: Helpful counter */}
+              {/* Card Footer: Helpful counter 
               <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
                 <span className="text-[11px]">এই রিভিউটি কি সহায়ক ছিল?</span>
                 <button
@@ -828,6 +831,7 @@ export const CustomerReviewsSection: React.FC = () => {
             </div>
           ))}
         </div>
+        */}
 
         {/* Action CTA Bar */}
         <div className="bg-gradient-to-r from-[#1C3B2B] via-[#244b37] to-[#1C3B2B] rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">

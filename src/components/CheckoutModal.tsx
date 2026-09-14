@@ -11,7 +11,8 @@ import {
   Award, 
   Tag, 
   Check, 
-  AlertCircle 
+  AlertCircle,
+  Pencil
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PaymentMethod } from '../types';
@@ -38,7 +39,9 @@ export const CheckoutModal: React.FC = () => {
     isLoggedIn,
     setIsLoginModalOpen,
     setLoginPromptReason,
-    initiateCheckout 
+    initiateCheckout,
+    setActiveTab,
+    setDashboardSubTab
   } = useStore();
 
   const [name, setName] = useState(currentUser.name || '');
@@ -149,9 +152,25 @@ export const CheckoutModal: React.FC = () => {
               {/* Customer Saved Address Pill Shortcuts */}
               {currentUser.savedAddresses.length > 0 && (
                 <div className="bg-stone-50 p-2.5 sm:p-3 rounded-xl border border-stone-200">
-                  <span className="text-xs text-stone-600 font-semibold block mb-1.5">
-                    সংরক্ষিত ঠিকানা থেকে বেছে নিন:
-                  </span>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs text-stone-600 font-semibold block">
+                      সংরক্ষিত ঠিকানা থেকে বেছে নিন:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCheckoutOpen(false);
+                        setActiveTab('dashboard');
+                        setDashboardSubTab('addresses');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="text-[11px] text-[#1C3B2B] hover:text-[#D97706] font-bold underline flex items-center gap-1 cursor-pointer"
+                      title="সংরক্ষিত ঠিকানা পরিবর্তন বা এডিট করুন"
+                    >
+                      <Pencil className="w-3 h-3 text-amber-600" />
+                      <span>এডিট / পরিচালনা</span>
+                    </button>
+                  </div>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {currentUser.savedAddresses.map((sa) => (
                       <button

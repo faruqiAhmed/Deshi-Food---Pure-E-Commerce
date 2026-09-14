@@ -1,7 +1,6 @@
 import React from 'react';
 import { Home, ShoppingBag, Zap, ShoppingCart, User } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
-import { PRODUCTS } from '../data/products';
 
 export const MobileBottomNav: React.FC = () => {
   const { 
@@ -15,7 +14,8 @@ export const MobileBottomNav: React.FC = () => {
     addToCart,
     isLoggedIn,
     setIsLoginModalOpen,
-    setLoginPromptReason
+    setLoginPromptReason,
+    products
   } = useStore();
 
   const handleHomeClick = () => {
@@ -64,7 +64,7 @@ export const MobileBottomNav: React.FC = () => {
       setIsCheckoutOpen(true);
     } else {
       // If cart is empty, add the flagship Mustard Oil and open checkout directly
-      const flagship = PRODUCTS.find(p => p.id === 'mustard-oil') || PRODUCTS[0];
+      const flagship = products.find(p => p.id === 'mustard-oil' || p.category === 'oil') || products[0];
       if (flagship) {
         addToCart(flagship, 1);
       }

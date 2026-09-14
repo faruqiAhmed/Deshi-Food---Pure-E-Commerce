@@ -15,29 +15,46 @@ import {
   X,
   Film
 } from 'lucide-react';
-import { PRODUCTS } from '../data/products';
 import { useStore } from '../context/StoreContext';
 import { Product } from '../types';
 
+const FALLBACK_OIL_PRODUCT: Product = {
+  id: 'df-oil-2l',
+  name: 'ঘানি ভাঙা সরিষার তেল',
+  englishName: 'Cold Pressed Mustard Oil',
+  category: 'oil',
+  price: 940,
+  packageSize: '২ লিটার',
+  weightInKg: 2,
+  image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&q=80&w=600',
+  rating: 4.9,
+  reviewsCount: 142,
+  inStock: true,
+  shortDescription: '১০০% খাঁটি দেশি সরিষার তেল',
+  fullDescription: 'প্রাচীন কাঠের ঘানিতে ধীরগতিতে ভাঙা খাঁটি সরিষার তেল।',
+  features: ['১০০% কোল্ড প্রেস ঘানি ভাঙা', 'প্রাকৃতিক ঝাঁঝ ও গন্ধ', 'কোনো রাসায়নিক উপাদান নেই']
+};
+
 export const FeaturedMustardOil: React.FC = () => {
-  const { addToCart, setIsCheckoutOpen, isLoggedIn, setIsLoginModalOpen, setLoginPromptReason } = useStore();
+  const { products, addToCart, setIsCheckoutOpen, isLoggedIn, setIsLoginModalOpen, setLoginPromptReason } = useStore();
   const [added, setAdded] = useState(false);
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
 
-  // Available mustard oil sizes
-  const oilProducts: Product[] = [
-    PRODUCTS.find(p => p.id === 'df-oil-1l') || PRODUCTS[0],
-    PRODUCTS.find(p => p.id === 'df-oil-2l') || PRODUCTS[1],
-    PRODUCTS.find(p => p.id === 'df-oil-5l') || PRODUCTS[PRODUCTS.length - 1],
-  ].filter(Boolean) as Product[];
+  // Available mustard oil sizes from live catalog
+  const oilProducts: Product[] = products.filter(p => p.category === 'oil');
+  const displayProducts: Product[] = oilProducts.length > 0 ? oilProducts : products;
 
-  const [selectedProduct, setSelectedProduct] = useState<Product>(
-    oilProducts.find(p => p.id === 'df-oil-2l') || oilProducts[0]
-  );
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const activeProduct: Product = 
+    (selectedProduct && displayProducts.some(p => p.id === selectedProduct.id)
+      ? displayProducts.find(p => p.id === selectedProduct.id)!
+      : (displayProducts.find(p => p.id === 'df-oil-2l') || displayProducts[0])) || FALLBACK_OIL_PRODUCT;
+
   const [quantity, setQuantity] = useState(1);
 
   const handleAddToCart = () => {
-    addToCart(selectedProduct, quantity);
+    addToCart(activeProduct, quantity);
     if (isLoggedIn) {
       setAdded(true);
       setTimeout(() => setAdded(false), 1500);
@@ -46,16 +63,16 @@ export const FeaturedMustardOil: React.FC = () => {
 
   const handleInstantBuy = () => {
     if (!isLoggedIn) {
-      addToCart(selectedProduct, quantity);
+      addToCart(activeProduct, quantity);
       setLoginPromptReason('checkout');
       setIsLoginModalOpen(true);
       return;
     }
-    addToCart(selectedProduct, quantity);
+    addToCart(activeProduct, quantity);
     setIsCheckoutOpen(true);
   };
 
-  const totalAmount = selectedProduct.price * quantity;
+  const totalAmount = activeProduct.price * quantity;
 
   return (
     <section 
@@ -192,7 +209,7 @@ export const FeaturedMustardOil: React.FC = () => {
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 {oilProducts.map((prod) => {
-                  const isSelected = selectedProduct.id === prod.id;
+                  const isSelected = activeProduct.id === prod.id;
                   return (
                     <button
                       key={prod.id}
@@ -245,7 +262,7 @@ export const FeaturedMustardOil: React.FC = () => {
                 <span className="text-xs text-stone-400 block font-medium">মোট মূল্য</span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-extrabold text-amber-400">৳ {totalAmount}</span>
-                  <span className="text-xs text-stone-300 font-medium">({selectedProduct.packageSize} × {quantity})</span>
+                  <span className="text-xs text-stone-300 font-medium">({activeProduct.packageSize} × {quantity})</span>
                 </div>
               </div>
 
@@ -321,7 +338,7 @@ export const FeaturedMustardOil: React.FC = () => {
             <div className="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
               <a
                 href={`https://wa.me/8801842078717?text=${encodeURIComponent(
-                  `আসসালামু আলাইকুম, আমি Deshi Food থেকে ${selectedProduct.name} (${selectedProduct.packageSize}) ${quantity}টি অর্ডার করতে চাই। মোট মূল্য: ৳${totalAmount}।`
+                  `আসসালামু আলাইকুম, আমি Deshi Food থেকে ${activeProduct.name} (${activeProduct.packageSize}) ${quantity}টি অর্ডার করতে চাই। মোট মূল্য: ৳${totalAmount}।`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"

@@ -13,10 +13,10 @@ import {
   Heart,
   ChevronRight,
   Film,
-  LogIn
+  LogIn,
+  LayoutDashboard
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
-import { PRODUCTS } from '../data/products';
 
 export const Header: React.FC = () => {
   const { 
@@ -29,14 +29,15 @@ export const Header: React.FC = () => {
     currentUser,
     addToCart,
     isLoggedIn,
-    setIsLoginModalOpen
+    setIsLoginModalOpen,
+    products
   } = useStore();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  const handleNavClick = (tab: 'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story') => {
+  const handleNavClick = (tab: 'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story' | 'admin') => {
     setActiveTab(tab);
     setIsMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -74,6 +75,15 @@ export const Header: React.FC = () => {
             >
               <PackageCheck className="w-3 h-3 text-[#EAB308]" />
               <span>লজিস্টিক শিপিং হাব</span>
+            </button>
+            <span className="text-white/40">|</span>
+            <button
+              onClick={() => handleNavClick('admin')}
+              className="flex items-center gap-1.5 text-xs bg-[#6366F1] hover:bg-[#4F46E5] text-white px-2.5 py-0.5 rounded-full font-bold transition-colors shadow-xs cursor-pointer"
+              id="top-admin-dashboard-btn"
+            >
+              <LayoutDashboard className="w-3 h-3 text-white" />
+              <span>Admin Dashboard</span>
             </button>
           </div>
         </div>
@@ -233,7 +243,7 @@ export const Header: React.FC = () => {
             <button
               onClick={() => {
                 if (cartCount === 0) {
-                  const flagship = PRODUCTS.find(p => p.id === 'mustard-oil') || PRODUCTS[0];
+                  const flagship = products.find(p => p.id === 'mustard-oil' || p.category === 'oil') || products[0];
                   if (flagship) {
                     addToCart(flagship, 1);
                   }
@@ -364,6 +374,13 @@ export const Header: React.FC = () => {
             >
               <span>📖</span>
               <span>আমাদের গল্প</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('admin')}
+              className="p-3 rounded-lg text-left transition-colors font-bold flex items-center gap-2 bg-[#EDE9FE] text-[#6366F1]"
+            >
+              <LayoutDashboard className="w-4 h-4 text-[#6366F1]" />
+              <span>Admin Dashboard</span>
             </button>
             <button
               onClick={() => {

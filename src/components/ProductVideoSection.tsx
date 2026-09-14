@@ -21,12 +21,11 @@ import {
   Film
 } from 'lucide-react';
 import { PRODUCT_VIDEOS, ProductVideo } from '../data/videos';
-import { PRODUCTS } from '../data/products';
 import { useStore } from '../context/StoreContext';
 import { Product } from '../types';
 
 export const ProductVideoSection: React.FC = () => {
-  const { addToCart, setIsCheckoutOpen, isLoggedIn, setIsLoginModalOpen, setLoginPromptReason } = useStore();
+  const { products, addToCart, setIsCheckoutOpen, isLoggedIn, setIsLoginModalOpen, setLoginPromptReason } = useStore();
   const [activeVideo, setActiveVideo] = useState<ProductVideo>(PRODUCT_VIDEOS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -37,9 +36,9 @@ export const ProductVideoSection: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Find corresponding product for the active video
-  const featuredProduct: Product | undefined = PRODUCTS.find(
+  const featuredProduct: Product | undefined = products.find(
     p => p.id === activeVideo.productId
-  ) || PRODUCTS[0];
+  ) || products[0];
 
   const filteredVideos = selectedCategory === 'all' 
     ? PRODUCT_VIDEOS 
@@ -406,7 +405,7 @@ export const ProductVideoSection: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {filteredVideos.map((video) => {
               const isActive = activeVideo.id === video.id;
-              const prod = PRODUCTS.find(p => p.id === video.productId);
+              const prod = products.find(p => p.id === video.productId);
 
               return (
                 <div

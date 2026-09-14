@@ -6,16 +6,20 @@ import {
   UserProfile, 
   PaymentMethod, 
   OrderStatus,
-  CourierDetails
+  CourierDetails,
+  AdminCustomer,
+  AdminSubTab
 } from '../types';
 import { PRODUCTS } from '../data/products';
 
 interface StoreContextType {
   // Navigation & Modals
-  activeTab: 'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story';
-  setActiveTab: (tab: 'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story') => void;
+  activeTab: 'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story' | 'admin';
+  setActiveTab: (tab: 'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story' | 'admin') => void;
   dashboardSubTab: 'orders' | 'addresses';
   setDashboardSubTab: (subTab: 'orders' | 'addresses') => void;
+  adminSubTab: AdminSubTab;
+  setAdminSubTab: (subTab: AdminSubTab) => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   isCheckoutOpen: boolean;
@@ -30,6 +34,23 @@ interface StoreContextType {
   setShippingLabelOrder: (order: Order | null) => void;
   loginPromptReason: 'cart' | 'checkout' | 'orders' | null;
   setLoginPromptReason: (reason: 'cart' | 'checkout' | 'orders' | null) => void;
+
+  // Products & Inventory Synchronization
+  products: Product[];
+  addProduct: (product: Product) => void;
+  updateProduct: (id: string, updated: Partial<Product>) => void;
+  deleteProduct: (id: string) => void;
+  updateStock: (id: string, newStock: number, inStock?: boolean) => void;
+  resetProductsToDefault: () => void;
+
+  // Admin Customers Synchronization
+  customers: AdminCustomer[];
+  addCustomer: (customer: AdminCustomer) => void;
+  updateCustomer: (id: string, updated: Partial<AdminCustomer>) => void;
+
+  // Admin Order Actions
+  updateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
+  deleteOrder: (orderId: string) => void;
 
   // Cart
   cart: CartItem[];
@@ -147,7 +168,250 @@ const INITIAL_USER: UserProfile = {
   ],
 };
 
+const INITIAL_CUSTOMERS: AdminCustomer[] = [
+  {
+    id: 'c-1',
+    name: 'Rafiul Islam',
+    phone: '01712-345678',
+    email: 'rafiul@example.com',
+    totalOrders: 5,
+    totalSpent: 7850,
+    joinedDate: 'Jan 12, 2025',
+    status: 'VIP',
+  },
+  {
+    id: 'c-2',
+    name: 'Tashfia Rahman',
+    phone: '01819-876543',
+    email: 'tashfia.r@example.com',
+    totalOrders: 4,
+    totalSpent: 9600,
+    joinedDate: 'Feb 03, 2025',
+    status: 'VIP',
+  },
+  {
+    id: 'c-3',
+    name: 'Md. Hasan',
+    phone: '01911-223344',
+    email: 'hasan.bd@example.com',
+    totalOrders: 2,
+    totalSpent: 2350,
+    joinedDate: 'Mar 15, 2025',
+    status: 'Active',
+  },
+  {
+    id: 'c-4',
+    name: 'Sadia Akter',
+    phone: '01622-334455',
+    email: 'sadia.akter@example.com',
+    totalOrders: 6,
+    totalSpent: 14200,
+    joinedDate: 'Dec 20, 2024',
+    status: 'VIP',
+  },
+  {
+    id: 'c-5',
+    name: 'Imran Hossain',
+    phone: '01788-990011',
+    email: 'imran.h@example.com',
+    totalOrders: 3,
+    totalSpent: 4890,
+    joinedDate: 'Apr 02, 2025',
+    status: 'Active',
+  },
+  {
+    id: 'c-6',
+    name: 'মো. ওমর ফারুক',
+    phone: '01842078717',
+    email: 'faruqdeveloper@gmail.com',
+    totalOrders: 8,
+    totalSpent: 18450,
+    joinedDate: 'Jan 15, 2024',
+    status: 'VIP',
+  },
+];
+
 const INITIAL_ORDERS: Order[] = [
+  {
+    id: 'DF-10086',
+    date: 'Sep 18, 2025 04:32 PM',
+    customerName: 'Rafiul Islam',
+    customerPhone: '01712-345678',
+    customerAddress: 'House 12, Road 4, Sector 7, Uttara, Dhaka',
+    customerCity: 'Dhaka',
+    items: [
+      { product: PRODUCTS.find(p => p.id === 'df-dates-ajwa') || PRODUCTS[0], quantity: 1 },
+      { product: PRODUCTS.find(p => p.id === 'df-honey-500g') || PRODUCTS[1], quantity: 1 },
+    ],
+    subtotal: 1600,
+    deliveryCharge: 60,
+    discount: 410,
+    loyaltyPointsRedeemed: 0,
+    total: 1250,
+    paymentMethod: 'bkash',
+    paymentStatus: 'paid',
+    transactionId: 'TRX-BK-10086',
+    orderStatus: 'delivered',
+    totalWeightKg: 1.0,
+    courierDetails: {
+      partner: 'Steadfast',
+      consignmentId: 'STDF-10086',
+      riderName: 'তানভীর আহমেদ',
+      riderPhone: '01711-223344',
+      estimatedDeliveryDate: 'Sep 18, 2025',
+    },
+    trackingHistory: [
+      {
+        title: 'Delivered',
+        description: 'Order successfully delivered to customer',
+        time: 'Sep 18, 04:32 PM',
+      },
+    ],
+  },
+  {
+    id: 'DF-10085',
+    date: 'Sep 18, 2025 02:15 PM',
+    customerName: 'Tashfia Rahman',
+    customerPhone: '01819-876543',
+    customerAddress: 'Flat 5B, Concord Tower, Banani, Dhaka',
+    customerCity: 'Dhaka',
+    items: [
+      { product: PRODUCTS.find(p => p.id === 'df-ghee-1kg') || PRODUCTS[0], quantity: 1 },
+      { product: PRODUCTS.find(p => p.id === 'df-honey-500g') || PRODUCTS[1], quantity: 1 },
+      { product: PRODUCTS.find(p => p.id === 'df-oil-1l') || PRODUCTS[2], quantity: 1 },
+    ],
+    subtotal: 2420,
+    deliveryCharge: 60,
+    discount: 0,
+    loyaltyPointsRedeemed: 0,
+    total: 2680,
+    paymentMethod: 'nagad',
+    paymentStatus: 'paid',
+    transactionId: 'TRX-NG-10085',
+    orderStatus: 'processing',
+    totalWeightKg: 2.5,
+    courierDetails: {
+      partner: 'Pathao',
+      consignmentId: 'PTH-10085',
+      riderName: 'সুমন হোসেন',
+      riderPhone: '01822-998877',
+      estimatedDeliveryDate: 'Sep 19, 2025',
+    },
+    trackingHistory: [
+      {
+        title: 'Processing',
+        description: 'Quality check and eco-friendly packing underway',
+        time: 'Sep 18, 02:15 PM',
+      },
+    ],
+  },
+  {
+    id: 'DF-10084',
+    date: 'Sep 18, 2025 12:45 PM',
+    customerName: 'Md. Hasan',
+    customerPhone: '01911-223344',
+    customerAddress: 'Block C, Bashundhara R/A, Dhaka',
+    customerCity: 'Dhaka',
+    items: [
+      { product: PRODUCTS.find(p => p.id === 'df-dates-ajwa') || PRODUCTS[0], quantity: 1 },
+    ],
+    subtotal: 950,
+    deliveryCharge: 60,
+    discount: 30,
+    loyaltyPointsRedeemed: 0,
+    total: 980,
+    paymentMethod: 'cod',
+    paymentStatus: 'pending',
+    orderStatus: 'confirmed',
+    totalWeightKg: 0.5,
+    courierDetails: {
+      partner: 'Steadfast',
+      consignmentId: 'STDF-10084',
+      riderName: 'কামাল উদ্দিন',
+      riderPhone: '01733-445566',
+      estimatedDeliveryDate: 'Sep 19, 2025',
+    },
+    trackingHistory: [
+      {
+        title: 'Confirmed',
+        description: 'Order confirmed and scheduled for pickup',
+        time: 'Sep 18, 12:45 PM',
+      },
+    ],
+  },
+  {
+    id: 'DF-10083',
+    date: 'Sep 17, 2025 08:22 PM',
+    customerName: 'Sadia Akter',
+    customerPhone: '01622-334455',
+    customerAddress: 'Dhanmondi 27, Dhaka',
+    customerCity: 'Dhaka',
+    items: [
+      { product: PRODUCTS.find(p => p.id === 'df-oil-2l') || PRODUCTS[0], quantity: 2 },
+      { product: PRODUCTS.find(p => p.id === 'df-ghee-1kg') || PRODUCTS[1], quantity: 1 },
+      { product: PRODUCTS.find(p => p.id === 'df-spices-combo') || PRODUCTS[2], quantity: 1 },
+    ],
+    subtotal: 3210,
+    deliveryCharge: 60,
+    discount: 0,
+    loyaltyPointsRedeemed: 0,
+    total: 3450,
+    paymentMethod: 'bkash',
+    paymentStatus: 'paid',
+    transactionId: 'TRX-BK-10083',
+    orderStatus: 'shipped',
+    totalWeightKg: 5.8,
+    courierDetails: {
+      partner: 'RedX',
+      consignmentId: 'RDX-10083',
+      riderName: 'জাকির হোসেন',
+      riderPhone: '01511-778899',
+      estimatedDeliveryDate: 'Sep 18, 2025',
+    },
+    trackingHistory: [
+      {
+        title: 'Shipped',
+        description: 'Parcel in transit to customer doorstep',
+        time: 'Sep 17, 08:22 PM',
+      },
+    ],
+  },
+  {
+    id: 'DF-10082',
+    date: 'Sep 17, 2025 05:10 PM',
+    customerName: 'Imran Hossain',
+    customerPhone: '01788-990011',
+    customerAddress: 'Mirpur DOHS, Dhaka',
+    customerCity: 'Dhaka',
+    items: [
+      { product: PRODUCTS.find(p => p.id === 'df-honey-500g') || PRODUCTS[0], quantity: 1 },
+      { product: PRODUCTS.find(p => p.id === 'df-dates-ajwa') || PRODUCTS[1], quantity: 1 },
+    ],
+    subtotal: 1600,
+    deliveryCharge: 120,
+    discount: 0,
+    loyaltyPointsRedeemed: 0,
+    total: 1720,
+    paymentMethod: 'nagad',
+    paymentStatus: 'paid',
+    transactionId: 'TRX-NG-10082',
+    orderStatus: 'delivered',
+    totalWeightKg: 1.0,
+    courierDetails: {
+      partner: 'Steadfast',
+      consignmentId: 'STDF-10082',
+      riderName: 'তানভীর আহমেদ',
+      riderPhone: '01711-223344',
+      estimatedDeliveryDate: 'Sep 18, 2025',
+    },
+    trackingHistory: [
+      {
+        title: 'Delivered',
+        description: 'Delivered and payment collected',
+        time: 'Sep 17, 05:10 PM',
+      },
+    ],
+  },
   {
     id: 'DF-1408',
     date: '১২ সেপ্টেম্বর, ২০২৬ ১২:৩০ PM',
@@ -240,8 +504,9 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation & Modals
-  const [activeTab, setActiveTab] = useState<'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story'>('shop');
+  const [activeTab, setActiveTab] = useState<'shop' | 'tracking' | 'dashboard' | 'shipping_hub' | 'story' | 'admin'>('shop');
   const [dashboardSubTab, setDashboardSubTab] = useState<'orders' | 'addresses'>('orders');
+  const [adminSubTab, setAdminSubTab] = useState<AdminSubTab>('dashboard');
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpenState] = useState<boolean>(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
@@ -250,6 +515,121 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [shippingLabelOrder, setShippingLabelOrder] = useState<Order | null>(null);
   const [loginPromptReason, setLoginPromptReason] = useState<'cart' | 'checkout' | 'orders' | null>(null);
   const [pendingCartItem, setPendingCartItem] = useState<{ product: Product; quantity: number } | null>(null);
+
+  // Products & Inventory State (Synchronized between Admin and Storefront)
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const saved = localStorage.getItem('deshifood_products');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+    return PRODUCTS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('deshifood_products', JSON.stringify(products));
+  }, [products]);
+
+  // Cross-tab synchronization for products
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'deshifood_products' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setProducts(parsed);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const addProduct = (newProduct: Product) => {
+    setProducts((prev) => [newProduct, ...prev]);
+  };
+
+  const updateProduct = (id: string, updated: Partial<Product>) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
+    );
+  };
+
+  const deleteProduct = (id: string) => {
+    setProducts((prev) => {
+      const updated = prev.filter((p) => p.id !== id);
+      try {
+        localStorage.setItem('deshifood_products', JSON.stringify(updated));
+      } catch (err) {
+        console.error('Failed to save products to localStorage:', err);
+      }
+      return updated;
+    });
+
+    setCart((prev) => {
+      const updatedCart = prev.filter((item) => item.product.id !== id);
+      try {
+        localStorage.setItem('deshifood_cart', JSON.stringify(updatedCart));
+      } catch (err) {
+        console.error('Failed to save cart to localStorage:', err);
+      }
+      return updatedCart;
+    });
+
+    setQuickViewProduct((prev) => (prev?.id === id ? null : prev));
+  };
+
+  const updateStock = (id: string, newStock: number, inStock?: boolean) => {
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              stockCount: Math.max(0, newStock),
+              inStock: inStock !== undefined ? inStock : newStock > 0,
+            }
+          : p
+      )
+    );
+  };
+
+  const resetProductsToDefault = () => {
+    setProducts(PRODUCTS);
+    try {
+      localStorage.setItem('deshifood_products', JSON.stringify(PRODUCTS));
+    } catch (err) {
+      console.error('Failed to reset products:', err);
+    }
+  };
+
+  // Customers State (Synchronized between Admin and Storefront)
+  const [customers, setCustomers] = useState<AdminCustomer[]>(() => {
+    try {
+      const saved = localStorage.getItem('deshifood_customers');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+    return INITIAL_CUSTOMERS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('deshifood_customers', JSON.stringify(customers));
+  }, [customers]);
+
+  const addCustomer = (customer: AdminCustomer) => {
+    setCustomers((prev) => [customer, ...prev]);
+  };
+
+  const updateCustomer = (id: string, updated: Partial<AdminCustomer>) => {
+    setCustomers((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+    );
+  };
 
   // Cart State (Initialized with 1 Mustard Oil so user immediately sees real data like in demo video)
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -585,6 +965,53 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
 
+    // Synchronize Inventory & Sales counts
+    setProducts((prev) =>
+      prev.map((prod) => {
+        const itemInCart = cart.find((ci) => ci.product.id === prod.id);
+        if (itemInCart) {
+          const newStock = Math.max(0, (prod.stockCount ?? 20) - itemInCart.quantity);
+          return {
+            ...prod,
+            stockCount: newStock,
+            soldCount: (prod.soldCount ?? 0) + itemInCart.quantity,
+            inStock: newStock > 0,
+          };
+        }
+        return prod;
+      })
+    );
+
+    // Synchronize Customer record
+    setCustomers((prev) => {
+      const phone = newOrder.customerPhone;
+      const existing = prev.find((c) => c.phone === phone);
+      if (existing) {
+        return prev.map((c) =>
+          c.id === existing.id
+            ? {
+                ...c,
+                totalOrders: c.totalOrders + 1,
+                totalSpent: c.totalSpent + newOrder.total,
+                name: newOrder.customerName || c.name,
+              }
+            : c
+        );
+      } else {
+        const newCust: AdminCustomer = {
+          id: `c-${Date.now()}`,
+          name: newOrder.customerName,
+          phone: newOrder.customerPhone,
+          email: `${newOrder.customerPhone.replace(/[^0-9]/g, '')}@customer.deshifood.com`,
+          totalOrders: 1,
+          totalSpent: newOrder.total,
+          joinedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          status: 'Active',
+        };
+        return [newCust, ...prev];
+      }
+    });
+
     setOrders((prev) => [newOrder, ...prev]);
     setLastPlacedOrder(newOrder);
     setCurrentTrackingOrderId(orderId);
@@ -594,6 +1021,42 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsOrderSuccessOpen(true);
 
     return newOrder;
+  };
+
+  // Admin Order Status Update
+  const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (order.id !== orderId) return order;
+        const now = new Date();
+        const timeStr = `${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+        return {
+          ...order,
+          orderStatus: newStatus,
+          trackingHistory: [
+            ...order.trackingHistory,
+            {
+              title: `Status: ${newStatus.toUpperCase()}`,
+              description: `Order marked as ${newStatus} by store admin`,
+              time: timeStr,
+            },
+          ],
+        };
+      })
+    );
+  };
+
+  // Admin Delete Order
+  const deleteOrder = (orderId: string) => {
+    setOrders((prev) => {
+      const updated = prev.filter((o) => o.id !== orderId);
+      try {
+        localStorage.setItem('deshifood_orders', JSON.stringify(updated));
+      } catch (err) {
+        console.error('Failed to save orders to localStorage:', err);
+      }
+      return updated;
+    });
   };
 
   // Live order status simulator for real-time tracking demonstration
@@ -699,6 +1162,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setActiveTab,
         dashboardSubTab,
         setDashboardSubTab,
+        adminSubTab,
+        setAdminSubTab,
+        products,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        updateStock,
+        resetProductsToDefault,
+        customers,
+        addCustomer,
+        updateCustomer,
+        updateOrderStatus,
+        deleteOrder,
         isCartOpen,
         setIsCartOpen,
         isCheckoutOpen,

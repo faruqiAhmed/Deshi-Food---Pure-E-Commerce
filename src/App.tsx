@@ -17,11 +17,20 @@ import { LoginModal } from './components/LoginModal';
 import { OrderTrackingView } from './components/OrderTrackingView';
 import { CustomerDashboard } from './components/CustomerDashboard';
 import { ShippingHub } from './components/ShippingHub';
+import { AdminDashboard } from './components/AdminDashboard';
 import { Footer } from './components/Footer';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
 const MainContent: React.FC = () => {
   const { activeTab } = useStore();
+
+  if (activeTab === 'admin') {
+    return (
+      <div className="min-h-screen">
+        <AdminDashboard />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col pb-20 lg:pb-0">

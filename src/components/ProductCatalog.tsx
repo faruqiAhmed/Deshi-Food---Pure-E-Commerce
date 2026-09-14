@@ -10,11 +10,10 @@ import {
   Search
 } from 'lucide-react';
 import { Product, Category } from '../types';
-import { PRODUCTS } from '../data/products';
 import { useStore } from '../context/StoreContext';
 
 export const ProductCatalog: React.FC = () => {
-  const { addToCart, setQuickViewProduct, isLoggedIn } = useStore();
+  const { products, addToCart, setQuickViewProduct, isLoggedIn } = useStore();
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
   const [addedItemIds, setAddedItemIds] = useState<Record<string, boolean>>({});
   const [searchFilter, setSearchFilter] = useState('');
@@ -26,7 +25,7 @@ export const ProductCatalog: React.FC = () => {
     { id: 'health', label: 'স্বাস্থ্যকর খাদ্য', icon: '🌾' },
   ];
 
-  const filteredProducts = PRODUCTS.filter((product) => {
+  const filteredProducts = products.filter((product) => {
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     const matchesSearch = 
       product.name.toLowerCase().includes(searchFilter.toLowerCase()) ||

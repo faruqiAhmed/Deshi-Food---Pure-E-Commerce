@@ -1,6 +1,6 @@
 {
-  "name": "Deshi Food - Pure E-Commerce & Order Tracking",
-  "description": "Mobile-responsive Bangladeshi e-commerce for pure organic foods with secure multi-gateway checkout, real-time order tracking, customer loyalty rewards, and streamlined shipping dispatch management.",
+  "name": "Deshi Food - Pure E-Commerce & Admin Dashboard",
+  "description": "Mobile-responsive Bangladeshi e-commerce for pure organic foods with synchronized Admin Dashboard managing live orders, inventory stock, catalog, customers, and delivery dispatch.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

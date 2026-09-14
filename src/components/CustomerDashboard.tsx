@@ -18,7 +18,8 @@ import {
   Home,
   Building2,
   CheckCircle2,
-  X
+  X,
+  LayoutDashboard
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
@@ -45,6 +46,7 @@ export const CustomerDashboard: React.FC = () => {
 
   // Editing state for saved addresses
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [addressToDeleteId, setAddressToDeleteId] = useState<string | null>(null);
   const [editAddressTag, setEditAddressTag] = useState<'Home' | 'Office' | 'Other'>('Home');
   const [editAddressCity, setEditAddressCity] = useState<'Dhaka' | 'Outside Dhaka'>('Dhaka');
   const [editAddressInput, setEditAddressInput] = useState('');
@@ -111,15 +113,14 @@ export const CustomerDashboard: React.FC = () => {
   };
 
   const handleDeleteAddress = (addrId: string) => {
-    if (window.confirm('আপনি কি এই ঠিকানাটি নিশ্চিতভাবে মুছে ফেলতে চান?')) {
-      const updated = currentUser.savedAddresses.filter((a) => a.id !== addrId);
-      updateUserProfile({ savedAddresses: updated });
-      if (editingAddressId === addrId) {
-        setEditingAddressId(null);
-      }
-      setFeedbackMsg('ঠিকানা সফলভাবে মুছে ফেলা হয়েছে।');
-      setTimeout(() => setFeedbackMsg(''), 3500);
+    const updated = currentUser.savedAddresses.filter((a) => a.id !== addrId);
+    updateUserProfile({ savedAddresses: updated });
+    if (editingAddressId === addrId) {
+      setEditingAddressId(null);
     }
+    setAddressToDeleteId(null);
+    setFeedbackMsg('ঠিকানা সফলভাবে মুছে ফেলা হয়েছে।');
+    setTimeout(() => setFeedbackMsg(''), 3500);
   };
 
   return (
@@ -151,8 +152,16 @@ export const CustomerDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Logout Button */}
-              <div>
+              {/* Logout & Admin Button */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveTab('admin')}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#6366F1] border border-[#C7D2FE] rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                  title="এডমিন ড্যাশবোর্ড খুলুন"
+                >
+                  <LayoutDashboard className="w-4 h-4 text-[#6366F1]" />
+                  <span>এডমিন প্যানেল</span>
+                </button>
                 <button
                   onClick={logout}
                   className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-stone-100 hover:bg-red-50 text-stone-700 hover:text-red-700 border border-stone-200 hover:border-red-200 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
@@ -597,23 +606,45 @@ export const CustomerDashboard: React.FC = () => {
 
                         {/* Edit & Delete Action Buttons */}
                         <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleStartEdit(addr)}
-                            className="px-2.5 py-1 text-xs font-bold text-stone-700 hover:text-[#1C3B2B] bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
-                            title="ঠিকানা এডিট করুন"
-                          >
-                            <Pencil className="w-3 h-3 text-amber-600" />
-                            <span>এডিট</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteAddress(addr.id)}
-                            className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                            title="ঠিকানা মুছে ফেলুন"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {addressToDeleteId === addr.id ? (
+                            <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 px-2 py-1 rounded-lg">
+                              <span className="text-[11px] font-bold text-red-700">মুছে ফেলবেন?</span>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAddress(addr.id)}
+                                className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-[11px] font-bold transition-colors cursor-pointer"
+                              >
+                                হ্যাঁ
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setAddressToDeleteId(null)}
+                                className="px-1.5 py-0.5 text-stone-600 hover:text-stone-800 text-[11px] cursor-pointer"
+                              >
+                                না
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleStartEdit(addr)}
+                                className="px-2.5 py-1 text-xs font-bold text-stone-700 hover:text-[#1C3B2B] bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+                                title="ঠিকানা এডিট করুন"
+                              >
+                                <Pencil className="w-3 h-3 text-amber-600" />
+                                <span>এডিট</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setAddressToDeleteId(addr.id)}
+                                className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                title="ঠিকানা মুছে ফেলুন"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
 

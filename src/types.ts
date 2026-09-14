@@ -4,7 +4,8 @@ export interface Product {
   id: string;
   name: string;
   englishName: string;
-  category: 'oil' | 'spices' | 'health';
+  nameBn?: string;
+  category: 'oil' | 'spices' | 'health' | 'honey' | 'dates' | 'snacks' | string;
   price: number;
   originalPrice?: number;
   packageSize: string;
@@ -13,10 +14,15 @@ export interface Product {
   rating: number;
   reviewsCount: number;
   inStock: boolean;
+  stockCount?: number;
+  soldCount?: number;
   shortDescription: string;
   fullDescription: string;
+  description?: string;
   features: string[];
   popular?: boolean;
+  badge?: string;
+  origin?: string;
 }
 
 export interface CartItem {
@@ -27,12 +33,38 @@ export interface CartItem {
 export type PaymentMethod = 'bkash' | 'nagad' | 'card' | 'cod';
 
 export type OrderStatus = 
+  | 'pending'
   | 'confirmed'
+  | 'processing'
   | 'packaging'
   | 'shipped'
   | 'out_for_delivery'
   | 'delivered'
   | 'cancelled';
+
+export interface AdminCustomer {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  totalOrders: number;
+  totalSpent: number;
+  joinedDate: string;
+  avatar?: string;
+  status: 'Active' | 'VIP' | 'Inactive';
+}
+
+export type AdminSubTab = 
+  | 'dashboard'
+  | 'orders'
+  | 'products'
+  | 'categories'
+  | 'customers'
+  | 'inventory'
+  | 'coupons'
+  | 'reviews'
+  | 'analytics'
+  | 'settings';
 
 export interface TrackingStep {
   status: OrderStatus;
@@ -59,7 +91,7 @@ export interface Order {
   customerName: string;
   customerPhone: string;
   customerAddress: string;
-  customerCity: 'Dhaka' | 'Outside Dhaka';
+  customerCity: 'Dhaka' | 'Outside Dhaka' | string;
   items: CartItem[];
   subtotal: number;
   deliveryCharge: number;
@@ -67,7 +99,7 @@ export interface Order {
   loyaltyPointsRedeemed: number;
   total: number;
   paymentMethod: PaymentMethod;
-  paymentStatus: 'paid' | 'pending_cod';
+  paymentStatus: 'paid' | 'pending_cod' | 'pending' | 'failed';
   transactionId?: string;
   orderStatus: OrderStatus;
   courierDetails: CourierDetails;

@@ -71,7 +71,7 @@ export const PaymentGatewayModal: React.FC = () => {
         ? `TRX-NG-${Math.floor(100000 + Math.random() * 900000)}`
         : `TXN-CARD-${Math.floor(100000 + Math.random() * 900000)}`;
 
-      completeOrder(generatedTxId);
+      completeOrder(generatedTxId, pendingPaymentMethod, pendingCheckoutData);
     }, 1800);
   };
 

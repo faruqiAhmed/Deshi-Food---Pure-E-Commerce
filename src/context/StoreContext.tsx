@@ -117,7 +117,19 @@ interface StoreContextType {
     paymentMethod: PaymentMethod;
     notes?: string;
   }) => void;
-  completeOrder: (transactionId?: string) => Order;
+  completeOrder: (
+    transactionId?: string,
+    methodOverride?: PaymentMethod,
+    checkoutDataOverride?: {
+      name: string;
+      phone: string;
+      address: string;
+      city: 'Dhaka' | 'Outside Dhaka';
+      notes?: string;
+    }
+  ) => Order;
+  updateOrderPaymentMethod: (orderId: string, newMethod: PaymentMethod) => void;
+  updatePaymentStatus: (orderId: string, newStatus: Order['paymentStatus']) => void;
   advanceOrderStatus: (orderId: string) => void;
   updateOrderCourier: (orderId: string, courier: Partial<CourierDetails>, newStatus?: OrderStatus) => void;
   reorderItems: (order: Order) => void;
@@ -707,6 +719,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('deshifood_orders', JSON.stringify(orders));
   }, [orders]);
 
+  // Cross-tab synchronization for orders
+  useEffect(() => {
+    const handleOrdersStorageChange = (e: StorageEvent) => {
+      if (e.key === 'deshifood_orders' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setOrders(parsed);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('storage', handleOrdersStorageChange);
+    return () => window.removeEventListener('storage', handleOrdersStorageChange);
+  }, []);
+
   const [currentTrackingOrderId, setCurrentTrackingOrderId] = useState<string>('DF-1408');
   const [lastPlacedOrder, setLastPlacedOrder] = useState<Order | null>(null);
   const [pendingPaymentMethod, setPendingPaymentMethod] = useState<PaymentMethod>('bkash');
@@ -895,7 +925,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // If online payment (bKash, Nagad, Card), open gateway modal; if COD, complete immediately
     if (formData.paymentMethod === 'cod') {
-      completeOrder();
+      completeOrder(undefined, 'cod', formData);
     } else {
       setIsCheckoutOpen(false);
       setIsPaymentModalOpen(true);
@@ -903,28 +933,55 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Complete Order
-  const completeOrder = (transactionId?: string): Order => {
+  const completeOrder = (
+    transactionId?: string,
+    methodOverride?: PaymentMethod,
+    checkoutDataOverride?: {
+      name: string;
+      phone: string;
+      address: string;
+      city: 'Dhaka' | 'Outside Dhaka';
+      notes?: string;
+    }
+  ): Order => {
+    const finalMethod: PaymentMethod = methodOverride || pendingPaymentMethod;
+    const finalCheckout = checkoutDataOverride || pendingCheckoutData;
+
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const orderId = `DF-${randomNum}`;
     const now = new Date();
     const formattedDate = `${now.toLocaleDateString('bn-BD')} ${now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}`;
 
+    const isCod = finalMethod === 'cod';
+    const finalPaymentStatus: 'paid' | 'pending_cod' = isCod ? 'pending_cod' : 'paid';
+
+    let finalTxId = transactionId;
+    if (!finalTxId && !isCod) {
+      if (finalMethod === 'bkash') {
+        finalTxId = `TRX-BK-${Math.floor(100000 + Math.random() * 900000)}`;
+      } else if (finalMethod === 'nagad') {
+        finalTxId = `TRX-NG-${Math.floor(100000 + Math.random() * 900000)}`;
+      } else if (finalMethod === 'card') {
+        finalTxId = `TXN-CARD-${Math.floor(100000 + Math.random() * 900000)}`;
+      }
+    }
+
     const newOrder: Order = {
       id: orderId,
       date: formattedDate,
-      customerName: pendingCheckoutData.name || currentUser.name,
-      customerPhone: pendingCheckoutData.phone || currentUser.phone,
-      customerAddress: pendingCheckoutData.address,
-      customerCity: pendingCheckoutData.city,
+      customerName: finalCheckout.name || currentUser.name,
+      customerPhone: finalCheckout.phone || currentUser.phone,
+      customerAddress: finalCheckout.address || currentUser.savedAddresses[0]?.address || 'বাড়ি নং ৪২, রোড নং ৭, সেক্টর ৪, উত্তরা',
+      customerCity: finalCheckout.city || deliveryCity || 'Dhaka',
       items: [...cart],
       subtotal: cartSubtotal,
       deliveryCharge: deliveryCharge,
       discount: couponDiscount,
       loyaltyPointsRedeemed: pointsToRedeem,
       total: cartTotal,
-      paymentMethod: pendingPaymentMethod,
-      paymentStatus: pendingPaymentMethod === 'cod' ? 'pending_cod' : 'paid',
-      transactionId: transactionId || (pendingPaymentMethod === 'bkash' ? `TRX-BK-${Math.floor(100000 + Math.random() * 900000)}` : undefined),
+      paymentMethod: finalMethod,
+      paymentStatus: finalPaymentStatus,
+      transactionId: finalTxId,
       orderStatus: 'confirmed',
       totalWeightKg: cartWeightKg,
       courierDetails: {
@@ -932,14 +989,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         consignmentId: `STDF-${Math.floor(100000 + Math.random() * 900000)}`,
         riderName: 'অপেক্ষমাণ (প্যাকিং সম্পন্ন হলে নির্ধারিত হবে)',
         riderPhone: '01842-078717',
-        estimatedDeliveryDate: pendingCheckoutData.city === 'Dhaka' ? '২৪-৪৮ ঘণ্টার মধ্যে' : '২-৩ কার্যদিবসের মধ্যে',
+        estimatedDeliveryDate: finalCheckout.city === 'Dhaka' ? '২৪-৪৮ ঘণ্টার মধ্যে' : '২-৩ কার্যদিবসের মধ্যে',
       },
       trackingHistory: [
         {
           title: 'অর্ডার গৃহীত ও কনফার্ম হয়েছে',
-          description: pendingPaymentMethod === 'cod'
+          description: isCod
             ? 'ক্যাশ অন ডেলিভারিতে অর্ডার নিশ্চিত করা হয়েছে।'
-            : `${pendingPaymentMethod.toUpperCase()} পেমেন্ট সফল হয়েছে।`,
+            : `${finalMethod.toUpperCase()} পেমেন্ট সফল হয়েছে।`,
           time: formattedDate,
         },
       ],
@@ -1050,6 +1107,46 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteOrder = (orderId: string) => {
     setOrders((prev) => {
       const updated = prev.filter((o) => o.id !== orderId);
+      try {
+        localStorage.setItem('deshifood_orders', JSON.stringify(updated));
+      } catch (err) {
+        console.error('Failed to save orders to localStorage:', err);
+      }
+      return updated;
+    });
+  };
+
+  // Admin Order Payment Method Update
+  const updateOrderPaymentMethod = (orderId: string, newMethod: PaymentMethod) => {
+    setOrders((prev) => {
+      const updated = prev.map((order) => {
+        if (order.id !== orderId) return order;
+        const isCod = newMethod === 'cod';
+        return {
+          ...order,
+          paymentMethod: newMethod,
+          paymentStatus: isCod ? ('pending_cod' as const) : ('paid' as const),
+        };
+      });
+      try {
+        localStorage.setItem('deshifood_orders', JSON.stringify(updated));
+      } catch (err) {
+        console.error('Failed to save orders to localStorage:', err);
+      }
+      return updated;
+    });
+  };
+
+  // Admin Payment Status Update (e.g. Mark Paid / Pending COD)
+  const updatePaymentStatus = (orderId: string, newStatus: Order['paymentStatus']) => {
+    setOrders((prev) => {
+      const updated = prev.map((order) => {
+        if (order.id !== orderId) return order;
+        return {
+          ...order,
+          paymentStatus: newStatus,
+        };
+      });
       try {
         localStorage.setItem('deshifood_orders', JSON.stringify(updated));
       } catch (err) {
@@ -1227,6 +1324,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setPendingCheckoutData,
         initiateCheckout,
         completeOrder,
+        updateOrderPaymentMethod,
+        updatePaymentStatus,
         advanceOrderStatus,
         updateOrderCourier,
         reorderItems,

@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   CreditCard
 } from 'lucide-react';
-import { Order, OrderStatus } from '../../types';
+import { Order, OrderStatus, PaymentMethod } from '../../types';
 import { useStore } from '../../context/StoreContext';
 
 interface OrderDetailsModalProps {
@@ -22,7 +22,7 @@ interface OrderDetailsModalProps {
 }
 
 export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose }) => {
-  const { updateOrderStatus, deleteOrder } = useStore();
+  const { updateOrderStatus, updateOrderPaymentMethod, updatePaymentStatus, deleteOrder } = useStore();
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus>(order?.orderStatus || 'confirmed');
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -217,20 +217,77 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
               <span>সর্বমোট প্রদেয়</span>
               <span className="text-[#6366F1]">৳ {order.total}</span>
             </div>
-            <div className="pt-2 flex items-center justify-between text-xs text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <CreditCard className="w-3.5 h-3.5" />
-                <span>পেমেন্ট মেথড: <strong className="uppercase text-slate-700">{order.paymentMethod}</strong></span>
-              </span>
-              <span className={`px-2 py-0.5 rounded font-bold uppercase text-[10px] ${
-                order.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-              }`}>
-                {order.paymentStatus}
-              </span>
+            <div className="pt-2 border-t border-slate-200/60 space-y-2">
+              <div className="flex items-center justify-between text-xs text-slate-600">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <CreditCard className="w-3.5 h-3.5 text-slate-400" />
+                  <span>পেমেন্ট মাধ্যম:</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded-md font-extrabold text-[11px] ${
+                    order.paymentMethod === 'bkash'
+                      ? 'bg-pink-50 text-[#E2136E] border border-pink-200'
+                      : order.paymentMethod === 'nagad'
+                      ? 'bg-orange-50 text-[#F7941D] border border-orange-200'
+                      : order.paymentMethod === 'card'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'bg-amber-50 text-amber-900 border border-amber-300'
+                  }`}>
+                    {order.paymentMethod === 'cod'
+                      ? 'Cash on Delivery (ক্যাশ অন ডেলিভারি)'
+                      : order.paymentMethod === 'bkash'
+                      ? 'bKash'
+                      : order.paymentMethod === 'nagad'
+                      ? 'Nagad'
+                      : 'Card'}
+                  </span>
+                  {/* Dropdown to change payment method */}
+                  <select
+                    value={order.paymentMethod}
+                    onChange={(e) => updateOrderPaymentMethod(order.id, e.target.value as PaymentMethod)}
+                    className="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 rounded px-1.5 py-0.5 cursor-pointer outline-hidden"
+                    title="পেমেন্ট মাধ্যম পরিবর্তন করুন"
+                  >
+                    <option value="cod">COD</option>
+                    <option value="bkash">bKash</option>
+                    <option value="nagad">Nagad</option>
+                    <option value="card">Card</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-slate-600">
+                <span className="font-medium">পেমেন্ট স্ট্যাটাস:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newStatus = order.paymentStatus === 'paid' ? 'pending_cod' : 'paid';
+                    updatePaymentStatus(order.id, newStatus);
+                  }}
+                  title="ক্লিক করে স্ট্যাটাস পরিবর্তন করুন"
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-extrabold text-[11px] cursor-pointer transition-colors ${
+                    order.paymentStatus === 'paid'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                      : 'bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100'
+                  }`}
+                >
+                  {order.paymentStatus === 'paid' ? (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>পরিশোধিত (PAID)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>ক্যাশ সংগ্রহ বাকি (PENDING COD)</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
             {order.transactionId && (
-              <p className="text-[11px] text-slate-500">
-                ট্রানজ্যাকশন আইডি: <strong className="text-slate-800">{order.transactionId}</strong>
+              <p className="text-[11px] text-slate-500 pt-1">
+                ট্রানজ্যাকশন আইডি: <strong className="font-mono text-slate-800">{order.transactionId}</strong>
               </p>
             )}
           </div>

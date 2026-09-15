@@ -624,9 +624,39 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                     ৳ {order.total.toLocaleString('en-IN')}
                   </td>
                   <td className="py-3.5 px-4">
-                    <span className="uppercase font-semibold text-slate-700">
-                      {order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod}
-                    </span>
+                    <div className="space-y-1">
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-extrabold ${
+                        order.paymentMethod === 'bkash'
+                          ? 'bg-pink-50 text-[#E2136E] border border-pink-200'
+                          : order.paymentMethod === 'nagad'
+                          ? 'bg-orange-50 text-[#F7941D] border border-orange-200'
+                          : order.paymentMethod === 'card'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'bg-amber-50 text-amber-900 border border-amber-300'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          order.paymentMethod === 'bkash'
+                            ? 'bg-[#E2136E]'
+                            : order.paymentMethod === 'nagad'
+                            ? 'bg-[#F7941D]'
+                            : order.paymentMethod === 'card'
+                            ? 'bg-blue-600'
+                            : 'bg-amber-600'
+                        }`} />
+                        {order.paymentMethod === 'cod'
+                          ? 'Cash on Delivery'
+                          : order.paymentMethod === 'bkash'
+                          ? 'bKash'
+                          : order.paymentMethod === 'nagad'
+                          ? 'Nagad'
+                          : 'Card'}
+                      </span>
+                      <span className={`block text-[10px] font-bold ${
+                        order.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-600'
+                      }`}>
+                        {order.paymentStatus === 'paid' ? '• Paid' : '• Pending (COD)'}
+                      </span>
+                    </div>
                   </td>
                   <td className="py-3.5 px-4">
                     {getStatusBadge(order.orderStatus)}

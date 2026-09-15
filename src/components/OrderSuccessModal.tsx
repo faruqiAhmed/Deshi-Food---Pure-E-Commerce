@@ -58,9 +58,27 @@ export const OrderSuccessModal: React.FC = () => {
             <span className="font-bold text-stone-800">{lastPlacedOrder.customerName}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-stone-500">মোট পরিশোধিত:</span>
-            <span className="font-bold text-stone-800">৳ {lastPlacedOrder.total} ({lastPlacedOrder.paymentMethod.toUpperCase()})</span>
+            <span className="text-stone-500">
+              {lastPlacedOrder.paymentMethod === 'cod' ? 'পেমেন্ট মেথড (ক্যাশ কালেকশন):' : 'মোট পরিশোধিত:'}
+            </span>
+            <span className="font-bold text-stone-800">
+              ৳ {lastPlacedOrder.total} (
+              {lastPlacedOrder.paymentMethod === 'cod' 
+                ? 'Cash on Delivery' 
+                : lastPlacedOrder.paymentMethod === 'bkash'
+                ? 'bKash'
+                : lastPlacedOrder.paymentMethod === 'nagad'
+                ? 'Nagad'
+                : 'Card'}
+              )
+            </span>
           </div>
+          {lastPlacedOrder.transactionId && (
+            <div className="flex justify-between">
+              <span className="text-stone-500">ট্রানজেকশন আইডি:</span>
+              <span className="font-mono font-bold text-stone-700">{lastPlacedOrder.transactionId}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-stone-500">কুরিয়ার ট্র্যাকিং:</span>
             <span className="font-mono font-bold text-emerald-700">{lastPlacedOrder.courierDetails.consignmentId}</span>

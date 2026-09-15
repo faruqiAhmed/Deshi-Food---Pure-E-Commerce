@@ -300,8 +300,17 @@ export const CustomerDashboard: React.FC = () => {
 
                     <div className="text-right">
                       <span className="text-lg font-extrabold text-[#1C3B2B]">৳ {o.total}</span>
-                      <span className="block text-[11px] text-stone-400 uppercase font-medium">
-                        {o.paymentMethod} ({o.paymentStatus === 'paid' ? 'Paid' : 'COD'})
+                      <span className="block text-[11px] font-semibold text-stone-500">
+                        {o.paymentMethod === 'cod'
+                          ? 'Cash on Delivery'
+                          : o.paymentMethod === 'bkash'
+                          ? 'bKash'
+                          : o.paymentMethod === 'nagad'
+                          ? 'Nagad'
+                          : 'Card'}{' '}
+                        <span className={o.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-700 font-bold'}>
+                          ({o.paymentStatus === 'paid' ? 'Paid' : 'Pending COD'})
+                        </span>
                       </span>
                     </div>
                   </div>

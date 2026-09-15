@@ -11,9 +11,11 @@ import {
   Calendar,
   ChevronDown,
   AlertTriangle,
+  CreditCard,
+  Check,
   X
 } from 'lucide-react';
-import { Order, OrderStatus } from '../../types';
+import { Order, OrderStatus, PaymentMethod } from '../../types';
 import { useStore } from '../../context/StoreContext';
 
 interface AdminOrdersProps {
@@ -21,9 +23,10 @@ interface AdminOrdersProps {
 }
 
 export const AdminOrders: React.FC<AdminOrdersProps> = ({ onSelectOrder }) => {
-  const { orders, updateOrderStatus, deleteOrder } = useStore();
+  const { orders, updateOrderStatus, updateOrderPaymentMethod, updatePaymentStatus, deleteOrder } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -34,7 +37,8 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ onSelectOrder }) => {
       order.customerPhone.includes(searchTerm);
 
     const matchesStatus = statusFilter === 'all' || order.orderStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesPayment = paymentFilter === 'all' || order.paymentMethod === paymentFilter;
+    return matchesSearch && matchesStatus && matchesPayment;
   });
 
   const getStatusBadge = (status: OrderStatus) => {
@@ -54,6 +58,40 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ onSelectOrder }) => {
       case 'pending':
       default:
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>;
+    }
+  };
+
+  const getPaymentMethodBadge = (method: PaymentMethod) => {
+    switch (method) {
+      case 'bkash':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-pink-50 text-[#E2136E] border border-pink-200 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#E2136E]" />
+            bKash
+          </span>
+        );
+      case 'nagad':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-orange-50 text-[#F7941D] border border-orange-200 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#F7941D]" />
+            Nagad
+          </span>
+        );
+      case 'card':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+            <CreditCard className="w-3 h-3 text-blue-600" />
+            Card
+          </span>
+        );
+      case 'cod':
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+            Cash on Delivery
+          </span>
+        );
     }
   };
 
@@ -97,6 +135,30 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ onSelectOrder }) => {
             placeholder="Search by Order ID, name, phone..."
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#6366F1] outline-hidden"
           />
+        </div>
+
+        {/* Payment Method Quick Filter */}
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
+          <span className="text-[11px] font-bold text-slate-400 uppercase mr-1">Payment:</span>
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'cod', label: 'COD' },
+            { id: 'bkash', label: 'bKash' },
+            { id: 'nagad', label: 'Nagad' },
+            { id: 'card', label: 'Card' },
+          ].map((pm) => (
+            <button
+              key={pm.id}
+              onClick={() => setPaymentFilter(pm.id)}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                paymentFilter === pm.id
+                  ? 'bg-slate-900 text-white shadow-2xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {pm.label}
+            </button>
+          ))}
         </div>
 
         <div className="text-xs text-slate-500 font-medium">
@@ -148,14 +210,58 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ onSelectOrder }) => {
                     ৳ {order.total.toLocaleString('en-IN')}
                   </td>
                   <td className="py-3.5 px-4">
-                    <span className="uppercase font-semibold text-slate-700">
-                      {order.paymentMethod}
-                    </span>
-                    <span className={`block text-[10px] font-bold ${
-                      order.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-600'
-                    }`}>
-                      {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
-                    </span>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        {getPaymentMethodBadge(order.paymentMethod)}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newStatus = order.paymentStatus === 'paid' ? 'pending_cod' : 'paid';
+                            updatePaymentStatus(order.id, newStatus);
+                            setToastMessage(`Order #${order.id} payment updated to ${newStatus === 'paid' ? 'Paid' : 'Pending COD'}`);
+                            setTimeout(() => setToastMessage(null), 3000);
+                          }}
+                          title="Click to toggle payment status"
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                            order.paymentStatus === 'paid'
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                          }`}
+                        >
+                          {order.paymentStatus === 'paid' ? (
+                            <>
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>Paid</span>
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="w-3 h-3 text-amber-600" />
+                              <span>Pending (COD)</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Quick Payment Method Selector */}
+                        <select
+                          value={order.paymentMethod}
+                          onChange={(e) => {
+                            const newMethod = e.target.value as PaymentMethod;
+                            updateOrderPaymentMethod(order.id, newMethod);
+                            setToastMessage(`Order #${order.id} payment method set to ${newMethod.toUpperCase()}`);
+                            setTimeout(() => setToastMessage(null), 3000);
+                          }}
+                          className="text-[10px] font-semibold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-1 py-0.5 rounded cursor-pointer outline-hidden transition-colors"
+                          title="Switch payment method"
+                        >
+                          <option value="cod">COD</option>
+                          <option value="bkash">bKash</option>
+                          <option value="nagad">Nagad</option>
+                          <option value="card">Card</option>
+                        </select>
+                      </div>
+                    </div>
                   </td>
                   <td className="py-3.5 px-4">
                     {getStatusBadge(order.orderStatus)}

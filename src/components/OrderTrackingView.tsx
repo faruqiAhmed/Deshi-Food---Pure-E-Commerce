@@ -277,7 +277,7 @@ export const OrderTrackingView: React.FC = () => {
                           🛵 রাইডার: {order.courierDetails.riderName}
                         </span>
                         <a 
-                          href={`tel:${order.courierDetails.riderPhone || '01842078717'}`}
+                          href={`tel:${order.courierDetails.riderPhone || '01751279584'}`}
                           className="text-xs text-emerald-700 hover:underline font-bold flex items-center gap-1"
                         >
                           <Phone className="w-3 h-3" /> কল করুন

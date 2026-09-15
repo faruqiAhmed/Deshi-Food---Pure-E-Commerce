@@ -54,7 +54,7 @@ export const Header: React.FC = () => {
               className="flex items-center gap-1.5 hover:text-[#EAB308] transition-colors font-medium shrink-0"
             >
               <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#EAB308]" />
-              <span>কল করুন: <strong className="font-mono text-xs sm:text-sm tracking-wide">01842-078717</strong></span>
+              <span>কল করুন: <strong className="font-mono text-xs sm:text-sm tracking-wide">01751279584</strong></span>
             </a>
             <span className="hidden md:inline text-white/40">|</span>
             <span className="hidden md:flex items-center gap-1.5 text-emerald-200">

@@ -154,7 +154,7 @@ export const Footer: React.FC = () => {
             <div className="text-xs space-y-2.5 text-stone-300">
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>হটলাইন/হোয়াটসঅ্যাপ: <strong className="font-mono text-white text-sm">01842-078717</strong></span>
+                <span>হটলাইন/হোয়াটসঅ্যাপ: <strong className="font-mono text-white text-sm">01642031736</strong></span>
               </p>
               <p className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-emerald-400 shrink-0" />

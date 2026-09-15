@@ -390,7 +390,7 @@ export const ShippingHub: React.FC = () => {
                     DESHI FOOD (DF)
                   </h2>
                   <p className="text-[10px] text-stone-600">খাঁটি পণ্য, সুস্থ জীবনের কথা</p>
-                  <p className="text-[10px] font-mono">হটলাইন: 01842-078717</p>
+                  <p className="text-[10px] font-mono">হটলাইন: 01751279584</p>
                 </div>
 
                 <div className="text-right">

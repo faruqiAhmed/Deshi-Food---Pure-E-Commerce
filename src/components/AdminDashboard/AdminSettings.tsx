@@ -5,13 +5,13 @@ export const AdminSettings: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [settings, setSettings] = useState({
     storeName: 'দেশি ফুড (Deshi Food)',
-    supportPhone: '01842-078717',
+    supportPhone: '01751279584',
     supportEmail: 'contact@deshifood.com',
     warehouseAddress: 'বাড়ি নং ৪২, রোড নং ৭, সেক্টর ৪, উত্তরা, ঢাকা-১২৩০',
     dhakaDeliveryFee: 60,
     outsideDeliveryFee: 120,
     freeDeliveryThreshold: 2500,
-    bkashMerchantNumber: '01842078717',
+    bkashMerchantNumber: '01751279584',
   });
 
   const handleSave = (e: React.FormEvent) => {

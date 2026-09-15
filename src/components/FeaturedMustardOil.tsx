@@ -163,7 +163,7 @@ export const FeaturedMustardOil: React.FC = () => {
                       ঐতিহ্যবাহী কাঠের ঘানিতে ভাঙা খাঁটি সরিষার তেল
                     </p>
                     <div className="flex items-center gap-2 mt-1 text-[11px] text-amber-200">
-                      <span>WhatsApp / কল: 01842-078717</span>
+                      <span>WhatsApp / কল: 01642031736</span>
                     </div>
                   </div>
                 </div>

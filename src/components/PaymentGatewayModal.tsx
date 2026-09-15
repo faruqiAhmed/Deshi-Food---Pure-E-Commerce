@@ -107,7 +107,7 @@ export const PaymentGatewayModal: React.FC = () => {
                 </h3>
               </div>
               <p className="text-xs text-white/80">
-                মার্চেন্ট: Deshi Food (01842-078717)
+                মার্চেন্ট: Deshi Food (01751279584)
               </p>
             </div>
           </div>

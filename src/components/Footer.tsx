@@ -176,7 +176,7 @@ export const Footer: React.FC = () => {
         <div className="pt-8 border-t border-emerald-900/60 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 gap-4">
           <p>© Deshi Food. সর্বস্বত্ব সংরক্ষিত  খাঁটি পণ্য, সুস্থ জীবনের কথা ।</p>
           <p className="text-amber-300 font-medium font-serif">
-            Development  By Nexcent Tech 
+            Development  By Nexcent Tech  | WhatsApp: 01642031736
           </p>
         </div>
 

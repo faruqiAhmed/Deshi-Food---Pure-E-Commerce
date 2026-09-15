@@ -149,13 +149,13 @@ export const StoryAndTrust: React.FC = () => {
           </div>
 
           <a
-            href="https://wa.me/8801842078717?text=হ্যালো%20Deshi%20Food,%20আমি%20পণ্য%20অর্ডার%20করতে%20চাই।"
+            href="https://wa.me/8801751279584?text=হ্যালো%20Deshi%20Food,%20আমি%20পণ্য%20অর্ডার%20করতে%20চাই।"
             target="_blank"
             rel="noreferrer"
             className="shrink-0 bg-[#25D366] hover:bg-[#20bd5a] text-black font-bold text-sm sm:text-base px-6 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2.5 cursor-pointer active:scale-98"
           >
             <Phone className="w-5 h-5 fill-current" />
-            <span className="font-mono text-lg tracking-wide font-extrabold text-white">0171279584</span>
+            <span className="font-mono text-lg tracking-wide font-extrabold text-white">01751279584</span>
           </a>
         </div>
 
